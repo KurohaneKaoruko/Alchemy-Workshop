@@ -1,64 +1,68 @@
-import Image from "next/image";
+import Link from "next/link";
+import type { CSSProperties } from "react";
 
 export default function Home() {
+  const embers = Array.from({ length: 14 }, (_, index) => {
+    const style = {
+      "--ember-left": `${(index * 19) % 100}%`,
+      "--ember-delay": `${(index % 6) * -1.15}s`,
+      "--ember-duration": `${10 + (index % 5) * 1.7}s`,
+      "--ember-size": `${4 + (index % 3)}px`,
+    } as CSSProperties;
+    return <span key={`home-ember-${index}`} className="workshop-ember" style={style} />;
+  });
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="relative min-h-screen bg-[linear-gradient(160deg,#e9dfc8_0%,#d2bf92_45%,#9f8452_100%)] px-4 py-10 text-[#2d2412] sm:px-8">
+      <div className="workshop-ambient">
+        <div className="workshop-ambient__fog" />
+        <div className="workshop-ambient__runes" />
+        {embers}
+      </div>
+
+      <main className="relative mx-auto max-w-5xl">
+        <section className="game-panel reveal-up rounded-3xl border border-[#6f5a31]/40 bg-[#f8f1de]/92 p-8 shadow-[0_24px_40px_rgba(60,44,16,0.25)]">
+          <p className="text-sm uppercase tracking-[0.35em] text-[#6d5832]">Text Alchemy RPG</p>
+          <h1 className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">极简炼金工坊</h1>
+          <p className="mt-4 max-w-3xl text-base leading-8 text-[#4a3b20]">
+            你将从底层学徒起步，在火、盐、硫、汞之间逐步掌握炼金秩序。阅读《翠玉录》、完成封印仪式、对抗反噬，最终炼出贤者之石。
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/workshop"
+              className="game-button rounded-xl border border-[#5f4a24] bg-[#e5ce95] px-5 py-2.5 text-sm font-semibold hover:bg-[#dcbf79]"
+            >
+              进入工坊
+            </Link>
+            <a
+              href="#highlights"
+              className="game-button rounded-xl border border-[#5f4a24]/60 bg-[#f9f4e6] px-5 py-2.5 text-sm hover:bg-[#efe3c6]"
+            >
+              查看玩法
+            </a>
+          </div>
+        </section>
+
+        <section id="highlights" className="mt-6 grid gap-4 md:grid-cols-3">
+          <article className="game-panel reveal-up reveal-delay-1 rounded-2xl border border-[#6f5a31]/35 bg-[#f9f3e3]/92 p-4">
+            <h2 className="font-semibold">文字冒险主导</h2>
+            <p className="mt-2 text-sm leading-7 opacity-85">
+              剧情探索独立成页，你可专注推进章节与事件，不被其他面板打断。
+            </p>
+          </article>
+          <article className="game-panel reveal-up reveal-delay-2 rounded-2xl border border-[#6f5a31]/35 bg-[#f9f3e3]/92 p-4">
+            <h2 className="font-semibold">AI 随机事件</h2>
+            <p className="mt-2 text-sm leading-7 opacity-85">
+              你可自填模型与 Key。未配置时自动使用内置事件，不中断流程。
+            </p>
+          </article>
+          <article className="game-panel reveal-up reveal-delay-3 rounded-2xl border border-[#6f5a31]/35 bg-[#f9f3e3]/92 p-4">
+            <h2 className="font-semibold">魔法阵等价交换</h2>
+            <p className="mt-2 text-sm leading-7 opacity-85">
+              自由填料、按价值交换；满足定式时必定产出指定物质。
+            </p>
+          </article>
+        </section>
       </main>
     </div>
   );
