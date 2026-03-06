@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "炼金工坊",
-  description: "以炼金术为主题的文字冒险网页游戏，含 AI 随机事件与离线回退模式。",
+  description: "以炼金术为主题的文字冒险网页游戏，支持 AI 异象事件与离线回退模式。",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

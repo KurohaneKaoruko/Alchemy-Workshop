@@ -14,8 +14,19 @@ import {
   createJournalEntry,
   withRankUnlockedRecipes,
 } from "@/features/game/state";
-import { clamp, consumeResources, hasEnoughResources, mergeResourceDelta } from "@/features/game/logic/utils";
-import { RANK_ORDER, type GameState, type Rank, type ResourceKey, type ResourcePool } from "@/features/game/types";
+import {
+  clamp,
+  consumeResources,
+  hasEnoughResources,
+  mergeResourceDelta,
+} from "@/features/game/logic/utils";
+import {
+  RANK_ORDER,
+  type GameState,
+  type Rank,
+  type ResourceKey,
+  type ResourcePool,
+} from "@/features/game/types";
 
 const MAX_VIGOR = 12;
 const STRICT_FORMULA_OUTPUTS: ResourceKey[] = ["philosopherSeed", "philosopherStone"];
@@ -53,11 +64,7 @@ export interface FormulaGuidance {
   formulaId: string;
   formulaName: string;
   outputLabel: string;
-  status:
-    | "locked_rank"
-    | "missing_prerequisite"
-    | "missing_stats"
-    | "ready_to_research";
+  status: "locked_rank" | "missing_prerequisite" | "missing_stats" | "ready_to_research";
   recommendations: string[];
 }
 
@@ -66,7 +73,7 @@ const STORY_ACTION_LABELS: Record<string, string> = {
   gather: "采集原料",
   distill: "看炉蒸馏",
   lecture: "公开演示",
-  meditate: "夜半冥想",
+  meditate: "午夜冥想",
   emerald_tablet: "解读翠玉录",
 };
 
@@ -300,10 +307,8 @@ function formatEffectHint(state: GameState): string {
   if (state.activeEffects.length === 0) {
     return "";
   }
-  const notes = state.activeEffects.map((effect) => {
-    return `${effect.label}(${effect.remainingTransmutations})`;
-  });
-  return ` 当前效应：${notes.join(" / ")}。`;
+  const notes = state.activeEffects.map((effect) => `${effect.label}(${effect.remainingTransmutations})`);
+  return ` 当前效果：${notes.join(" / ")}。`;
 }
 
 function getFormulaById(formulaId: string): ArcaneFormula | undefined {
@@ -329,7 +334,7 @@ export function getNextFormulaGuidance(state: GameState): FormulaGuidance | null
       status: "locked_rank",
       recommendations: [
         `先提升到「${target.minRank}」后才能稳定破译此定式。`,
-        "优先在剧情页执行探索行动，提升知识/熟练/名望。",
+        "优先在剧情页执行探索行动，提升知识、熟练与名望。",
       ],
     };
   }
@@ -341,7 +346,7 @@ export function getNextFormulaGuidance(state: GameState): FormulaGuidance | null
       status: "missing_prerequisite",
       recommendations: [
         `先破译前置定式「${preFormula?.name ?? rule.requireKnown}」。`,
-        "剧情里优先选择“解读翠玉录”与“夜半冥想”。",
+        "剧情里优先选择“解读翠玉录”与“午夜冥想”。",
       ],
     };
   }
@@ -386,15 +391,13 @@ function markFormulaDiscovered(state: GameState, formula: ArcaneFormula): GameSt
       day: state.day,
       type: "system",
       title: `定式破译：${formula.name}`,
-      body: `你在阵纹中捕捉到稳定谐振，成功破译了「${formula.name}」定式。`,
+      body: `你在阵纹中捕捉到稳定谐振，成功破译了「${formula.name}」。`,
     }),
   );
 }
 
 function findResonanceFormula(state: GameState, offer: Partial<ResourcePool>): ArcaneFormula | undefined {
-  const offerKeys = Object.keys(offer).filter(
-    (key) => (offer[key as ResourceKey] ?? 0) > 0,
-  ) as ResourceKey[];
+  const offerKeys = Object.keys(offer).filter((key) => (offer[key as ResourceKey] ?? 0) > 0) as ResourceKey[];
 
   return ARCANE_FORMULAS.find((formula) => {
     if (state.discoveredFormulas.includes(formula.id)) {
@@ -509,18 +512,14 @@ export function transmuteByCircle(state: GameState, request: CircleRequest): Cir
 
     nextState = markFormulaDiscovered(nextState, formula);
 
-    nextState = applyCommonSuccessEffects(
-      nextState,
-      offeredValue,
-      `${formula.name}触发：${formula.lore}`,
-    );
+    nextState = applyCommonSuccessEffects(nextState, offeredValue, `${formula.name}触发：${formula.lore}`);
 
     nextState = withRankUnlockedRecipes(nextState, nextState.rank);
 
     if (formula.id === "philosopher_stone") {
       nextState = {
         ...nextState,
-        rank: "最强炼金术师",
+        rank: "至高炼金术师",
         ended: true,
         ending: "philosopher_stone",
       };
@@ -545,9 +544,7 @@ export function transmuteByCircle(state: GameState, request: CircleRequest): Cir
   }
 
   const resonanceFormula = findResonanceFormula(state, offered);
-  const discoveredByResonance = resonanceFormula
-    ? markFormulaDiscovered(state, resonanceFormula)
-    : state;
+  const discoveredByResonance = resonanceFormula ? markFormulaDiscovered(state, resonanceFormula) : state;
   const resonanceHint = resonanceFormula
     ? ` 你在余波中破译了「${resonanceFormula.name}」的部分阵式。`
     : "";
@@ -567,16 +564,15 @@ export function transmuteByCircle(state: GameState, request: CircleRequest): Cir
   const outputSummary = formatOutputResources(randomOutput);
   const tendencyNotes: string[] = [];
   if (effectTotals.toleranceBonus > 0) {
-    tendencyNotes.push("高阶产物概率提升");
+    tendencyNotes.push("高阶产物权重提升");
   }
   if (effectTotals.tolerancePenalty > 0) {
-    tendencyNotes.push("低阶杂质概率提升");
+    tendencyNotes.push("低阶杂质权重提升");
   }
   if (effectTotals.yieldBonus > 0) {
-    tendencyNotes.push("细粒度产出概率提升");
+    tendencyNotes.push("细粒产物权重提升");
   }
-  const tendencyHint =
-    tendencyNotes.length > 0 ? ` 当前倾向：${tendencyNotes.join("，")}。` : "";
+  const tendencyHint = tendencyNotes.length > 0 ? ` 当前倾向：${tendencyNotes.join("，")}。` : "";
 
   let nextState: GameState = {
     ...discoveredByResonance,

@@ -35,6 +35,10 @@ export function ChapterIntroOverlay({ intro, onClose }: ChapterIntroOverlayProps
     <div className="chapter-intro-overlay">
       <div className="chapter-intro-overlay__backdrop" />
       <div className="chapter-intro-overlay__frame">
+        <div className="cinematic-frame__halo" aria-hidden />
+        <div className="cinematic-frame__seal" aria-hidden />
+        <div className="cinematic-frame__ornament cinematic-frame__ornament--left" aria-hidden />
+        <div className="cinematic-frame__ornament cinematic-frame__ornament--right" aria-hidden />
         <p className="chapter-intro-overlay__label">Chapter Entry</p>
         <h2 className="chapter-intro-overlay__title">{intro.title}</h2>
         <p className="chapter-intro-overlay__rank">{intro.rank}</p>
@@ -44,7 +48,7 @@ export function ChapterIntroOverlay({ intro, onClose }: ChapterIntroOverlayProps
           onClick={onClose}
           className="game-button mt-3 rounded-lg border border-[#7a6338] bg-[#f0dfb8] px-3 py-1.5 text-sm hover:bg-[#e5cf9f]"
         >
-          跳过
+          继续
         </button>
       </div>
     </div>

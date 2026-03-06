@@ -3,7 +3,7 @@ export const RANK_ORDER = [
   "炼金士",
   "大炼金士",
   "贤者候补",
-  "最强炼金术师",
+  "至高炼金术师",
 ] as const;
 
 export type Rank = (typeof RANK_ORDER)[number];
@@ -64,10 +64,7 @@ export interface LastEventDigest {
   outcomeSummary: string;
 }
 
-export type ActiveEffectKind =
-  | "tolerance_bonus"
-  | "tolerance_penalty"
-  | "yield_bonus";
+export type ActiveEffectKind = "tolerance_bonus" | "tolerance_penalty" | "yield_bonus";
 
 export interface ActiveEffect {
   id: string;
@@ -117,7 +114,7 @@ export interface ChapterChoice {
 
 export interface ChapterData {
   id: string;
-  rank: Exclude<Rank, "最强炼金术师">;
+  rank: Exclude<Rank, "至高炼金术师">;
   title: string;
   summary: string;
   atmosphere: string;

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ARCANE_FORMULAS } from "@/features/game/logic/alchemyCircle";
-import { getNextFormulaGuidance } from "@/features/game/logic/alchemyCircle";
+import { ARCANE_FORMULAS, getNextFormulaGuidance } from "@/features/game/logic/alchemyCircle";
 import {
   ChapterIntroOverlay,
   type ChapterIntroPayload,
@@ -12,6 +11,8 @@ import { EventCinematicOverlay } from "@/features/game/components/EventCinematic
 import { RankAscensionOverlay } from "@/features/game/components/RankAscensionOverlay";
 import { useWorkshopGame } from "@/features/game/logic/useWorkshopGame";
 import { addCinematicArchiveEntry } from "@/features/storage/cinematicArchive";
+
+const CHOICE_SIGILS = ["I", "II", "III", "IV"] as const;
 
 export default function StoryPage() {
   const {
@@ -29,9 +30,7 @@ export default function StoryPage() {
   } = useWorkshopGame();
   const [chapterIntro, setChapterIntro] = useState<ChapterIntroPayload | null>(null);
   const discoveredSet = new Set(game.discoveredFormulas);
-  const discoveredCount = ARCANE_FORMULAS.filter((formula) =>
-    discoveredSet.has(formula.id),
-  ).length;
+  const discoveredCount = ARCANE_FORMULAS.filter((formula) => discoveredSet.has(formula.id)).length;
   const nextGuidance = getNextFormulaGuidance(game);
   const clueEntries = game.journal
     .filter((entry) => entry.title.startsWith("定式线索："))
@@ -86,97 +85,140 @@ export default function StoryPage() {
   }, [chapter.id, chapter.summary, chapter.title, game.rank, game.day]);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
-      <section className="game-panel reveal-up rounded-2xl border border-[#6f5a31]/40 bg-[#f9f2df]/92 p-5 shadow-[0_8px_18px_rgba(70,48,16,0.18)]">
-        <h2 className="text-2xl font-semibold">{chapter.title}</h2>
-        <p className="mt-2 text-sm leading-7 opacity-90">{chapter.summary}</p>
-        <p className="mt-3 rounded-lg border border-[#7f704e]/35 bg-[#fff8e8] p-3 text-sm leading-7">
-          {chapter.atmosphere}
-        </p>
-        <p className="mt-3 rounded-lg border border-[#7f704e]/35 bg-[#fff8e8] p-3 text-sm leading-7">
-          {statusText}
-        </p>
-
-        <div className="mt-4 grid gap-2">
-          {chapter.choices.map((choice) => (
-            <button
-                key={choice.id}
-                type="button"
-                onClick={() => doStoryChoice(choice.id)}
-                disabled={busy || game.actionsLeft <= 0 || game.ended}
-                className="game-action-card rounded-xl border border-[#6b5b37]/55 bg-[#fff8e6] px-3 py-2 text-left text-sm hover:bg-[#f1e1bf] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-              <p className="font-semibold">{choice.label}</p>
-              <p className="mt-1 opacity-85">{choice.flavorText}</p>
-            </button>
-          ))}
+    <div className="workshop-page">
+      <section className="workshop-hero-card reveal-up">
+        <p className="workshop-hero-card__eyebrow">Chapter Progression</p>
+        <h2 className="workshop-hero-card__title">{chapter.title}</h2>
+        <p className="workshop-hero-card__lead">{chapter.summary}</p>
+        <div className="workshop-hero-card__meta">
+          <span className="workshop-pill">第 {game.day} 日</span>
+          <span className="workshop-pill">当前境界：{game.rank}</span>
+          <span className="workshop-pill">今日行动：{game.actionsLeft}/3</span>
+          <span className="workshop-pill">已解出定式：{discoveredCount}/{ARCANE_FORMULAS.length}</span>
         </div>
-
-        {game.lastEvent ? (
-          <article className="mt-4 reveal-up rounded-lg border border-[#6b5b37]/45 bg-[#fff7e0] p-3 text-sm leading-7">
-            <p className="font-semibold">
-              随机事件 · {game.lastEvent.source === "ai" ? "AI" : "内置"}
-            </p>
-            <p className="mt-1">{game.lastEvent.title}</p>
-            <p className="mt-1 opacity-85">{game.lastEvent.body}</p>
-            <p className="mt-1 text-[#6e5c38]">{game.lastEvent.outcomeSummary}</p>
-          </article>
-        ) : null}
+        <div className="ritual-chip-row mt-4">
+          <span className="ritual-chip">章节气氛：{chapter.atmosphere.slice(0, 10)}...</span>
+          <span className="ritual-chip">当前线索：{clueEntries.length > 0 ? clueEntries.length : "待发现"}</span>
+        </div>
+        <p className="ritual-note">{chapter.atmosphere}</p>
       </section>
 
-      <aside className="space-y-4 reveal-up reveal-delay-2">
-        <section className="game-panel rounded-2xl border border-[#6f5a31]/40 bg-[#f9f2df]/92 p-4 shadow-[0_8px_18px_rgba(70,48,16,0.16)]">
-          <h3 className="text-lg font-semibold">当前阶段</h3>
-          <p className="mt-2 text-sm leading-7">
-            第 {game.day} 日 · {game.rank}
-          </p>
-          <p className="text-sm leading-7">今日行动：{game.actionsLeft}/3</p>
-          <p className="text-sm leading-7">精力：{game.vigor}</p>
-        </section>
-
-        <section className="game-panel rounded-2xl border border-[#6f5a31]/40 bg-[#f9f2df]/92 p-4 shadow-[0_8px_18px_rgba(70,48,16,0.16)]">
-          <h3 className="text-lg font-semibold">翠玉录注记</h3>
-          <p className="mt-2 text-sm leading-7 opacity-85">
-            “其下如其上，其上如其下，以成就一物之奇迹。”在探索页的每次行动都在调整你对这句话的理解。
-          </p>
-        </section>
-
-        <section className="game-panel rounded-2xl border border-[#6f5a31]/40 bg-[#f9f2df]/92 p-4 shadow-[0_8px_18px_rgba(70,48,16,0.16)]">
-          <h3 className="text-lg font-semibold">定式线索进度</h3>
-          <p className="mt-2 text-sm leading-7">
-            已破译 {discoveredCount} / {ARCANE_FORMULAS.length} 条炼金定式。
-          </p>
-          {nextGuidance ? (
-            <div className="mt-2 rounded border border-[#8b7954]/35 bg-[#fff8e8] p-2 text-sm">
-              <p className="font-semibold">
-                下一目标：{nextGuidance.formulaName}（产物：{nextGuidance.outputLabel}）
-              </p>
-              <ul className="mt-1 list-disc pl-5">
-                {nextGuidance.recommendations.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
+      <div className="workshop-page__grid lg:grid-cols-[minmax(0,1.2fr)_22rem]">
+        <section className="space-y-4 reveal-up">
+          <article className="ritual-card rounded-2xl p-5">
+            <p className="ritual-card__eyebrow">Current Situation</p>
+            <h3 className="ritual-card__title">当前局势</h3>
+            <p className="ritual-note">{statusText}</p>
+            <div className="ritual-chip-row mt-4">
+              <span className="ritual-chip">待选行动：{chapter.choices.length}</span>
+              <span className="ritual-chip">
+                执行权限：{busy ? "处理中" : game.actionsLeft > 0 && !game.ended ? "可行动" : "已封闭"}
+              </span>
             </div>
-          ) : (
-            <p className="mt-2 rounded border border-[#8b7954]/35 bg-[#fff8e8] p-2 text-sm">
-              所有定式均已破译，接下来专注终局炼成即可。
-            </p>
-          )}
-          {clueEntries.length > 0 ? (
-            <ul className="mt-2 space-y-1 text-sm">
-              {clueEntries.map((entry) => (
-                <li key={entry.id} className="rounded border border-[#8b7954]/35 bg-[#fff8e8] px-2 py-1">
-                  {entry.title.replace("定式线索：", "")}
-                </li>
+            <div className="mt-4 grid gap-3">
+              {chapter.choices.map((choice, index) => (
+                <button
+                  key={choice.id}
+                  type="button"
+                  onClick={() => doStoryChoice(choice.id)}
+                  disabled={busy || game.actionsLeft <= 0 || game.ended}
+                  className="ritual-link-card ritual-link-card--story story-choice-card text-left disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span className="story-choice-card__seal" aria-hidden>
+                    {CHOICE_SIGILS[index] ?? `0${index + 1}`}
+                  </span>
+                  <p className="ritual-link-card__eyebrow">Action Option</p>
+                  <h4 className="ritual-link-card__title">{choice.label}</h4>
+                  <p className="ritual-link-card__copy">{choice.flavorText}</p>
+                  <div className="story-choice-card__footer">
+                    <span>消耗 1 行动</span>
+                    <span>{game.actionsLeft > 0 && !busy ? "立即执行" : "等待恢复"}</span>
+                  </div>
+                </button>
               ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-sm leading-7 opacity-75">
-              暂无新线索。优先尝试“解读翠玉录”与“夜半冥想”以推进定式破译。
-            </p>
-          )}
+            </div>
+          </article>
+
+          {game.lastEvent ? (
+            <article className="ritual-card--dark rounded-2xl p-5">
+              <p className="ritual-card__eyebrow">Latest Omen</p>
+              <h3 className="ritual-card__title">最近一次异象</h3>
+              <div className="ritual-log-item mt-4">
+                <p className="text-sm font-semibold text-[#3f2d16]">
+                  {game.lastEvent.title} · {game.lastEvent.source === "ai" ? "AI" : "内置"}
+                </p>
+                <p className="mt-2 whitespace-pre-line text-sm leading-7 text-[#5a4220]/85">{game.lastEvent.body}</p>
+                <p className="mt-2 text-sm text-[#6e5c38]">{game.lastEvent.outcomeSummary}</p>
+              </div>
+            </article>
+          ) : null}
         </section>
-      </aside>
+
+        <aside className="workshop-page__sidebar reveal-up reveal-delay-2">
+          <section className="ritual-card rounded-2xl p-4">
+            <p className="ritual-card__eyebrow">Field Notes</p>
+            <h3 className="ritual-card__title">当前阶段</h3>
+            <div className="ritual-stat-grid mt-4">
+              <div className="ritual-stat">
+                <p className="ritual-stat__label">精力</p>
+                <p className="ritual-stat__value">{game.vigor}</p>
+              </div>
+              <div className="ritual-stat">
+                <p className="ritual-stat__label">知识</p>
+                <p className="ritual-stat__value">{game.knowledge}</p>
+              </div>
+              <div className="ritual-stat">
+                <p className="ritual-stat__label">熟练</p>
+                <p className="ritual-stat__value">{game.mastery}</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="ritual-card rounded-2xl p-4">
+            <p className="ritual-card__eyebrow">Formula Guidance</p>
+            <h3 className="ritual-card__title">定式线索进度</h3>
+            {nextGuidance ? (
+              <div className="ritual-list mt-4">
+                <div className="ritual-list__item">
+                  <p className="text-sm font-semibold text-[#3f2d16]">
+                    下一目标：{nextGuidance.formulaName}（产物：{nextGuidance.outputLabel}）
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-7 text-[#5a4220]/85">
+                    {nextGuidance.recommendations.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <p className="ritual-note">所有定式均已解析，接下来只需专注于终局炼成。</p>
+            )}
+
+            {clueEntries.length > 0 ? (
+              <div className="ritual-list mt-3">
+                {clueEntries.map((entry) => (
+                  <div key={entry.id} className="ritual-list__item">
+                    <p className="text-sm text-[#4f3b1d]">{entry.title.replace("定式线索：", "")}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm leading-7 text-[#5b4726]/78">
+                暂无新线索。优先尝试“解读翠玉录”与“午夜冥想”来推进破译。
+              </p>
+            )}
+          </section>
+
+          <section className="ritual-card--dark rounded-2xl p-4">
+            <p className="ritual-card__eyebrow">Emerald Tablet</p>
+            <h3 className="ritual-card__title">翠玉录注记</h3>
+            <p className="ritual-card__copy">
+              “其下如其上，其上如其下，以成就一物之奇迹。”每一次探索都在校正你对这句箴言的理解。
+            </p>
+          </section>
+        </aside>
+      </div>
+
       <EventCinematicOverlay
         key={cinematicEvent?.id ?? "cinematic-none"}
         event={cinematicEvent}
@@ -192,10 +234,7 @@ export default function StoryPage() {
         ending={endingCinematic}
         onClose={dismissEndingCinematic}
       />
-      <ChapterIntroOverlay
-        intro={chapterIntro}
-        onClose={() => setChapterIntro(null)}
-      />
+      <ChapterIntroOverlay intro={chapterIntro} onClose={() => setChapterIntro(null)} />
     </div>
   );
 }

@@ -47,33 +47,33 @@ function applyEventTransientEffects(
     next = addOrRefreshEffect(next, {
       kind: "tolerance_bonus",
       label: "衡律祝福",
-      description: `等价交换允许 ±${tolerance} 价值偏差（接下来3次炼成）。`,
+      description: `更容易显化高阶产物（接下来 3 次炼成，高阶权重 +${tolerance}）。`,
       value: tolerance,
       remainingTransmutations: 3,
     });
-    notes.push(`获得临时效果：衡律祝福（容差 ±${tolerance}）。`);
+    notes.push(`获得临时效果：衡律祝福（高阶权重 +${tolerance}）。`);
   }
 
   if (outcome.success && event.tags.includes("material") && (outcome.critical || event.tags.includes("resource-rich"))) {
     next = addOrRefreshEffect(next, {
       kind: "yield_bonus",
       label: "丰饶回响",
-      description: "普通等价交换额外 +1 产物（接下来2次炼成）。",
+      description: "普通等价交换更容易裂解为细粒产物（接下来 2 次炼成）。",
       value: 1,
       remainingTransmutations: 2,
     });
-    notes.push("获得临时效果：丰饶回响（普通交换额外 +1 产物）。");
+    notes.push("获得临时效果：丰饶回响（细粒产物权重提升）。");
   }
 
   if (!outcome.success && (outcome.backlash || event.tags.includes("risk-high"))) {
     next = addOrRefreshEffect(next, {
       kind: "tolerance_penalty",
       label: "紊乱残渣",
-      description: "等价交换容差 -1（接下来2次炼成）。",
+      description: "接下来的炼成更容易混入低阶杂质（持续 2 次炼成）。",
       value: 1,
       remainingTransmutations: 2,
     });
-    notes.push("受到负面效果：紊乱残渣（容差 -1）。");
+    notes.push("受到负面效果：紊乱残渣（低阶杂质权重提升）。");
   }
 
   return { state: next, notes };
@@ -142,7 +142,7 @@ export function resolveEventOutcome(
       critical,
       backlash: false,
       summary: critical
-        ? "你在事件中捕捉到极其稀有的共振窗口，收益显著放大。"
+        ? "你在异象中捉住了极其罕见的共振窗口，收益被显著放大。"
         : "你平稳处理了这次异象，并从中提炼出可用经验。",
       delta: {
         knowledge: 1 + insightGain + (critical ? 2 : 0),
@@ -162,8 +162,8 @@ export function resolveEventOutcome(
     critical: false,
     backlash,
     summary: backlash
-      ? "仪式余波反噬了炉台，你勉强稳住核心容器。"
-      : "事件并未转化为收益，但你记录了重要的失败参数。",
+      ? "仪式余波反噬了炉台，你勉强稳住了核心容器。"
+      : "异象并未转化为收益，但你记录下了关键的失败参数。",
     delta: {
       knowledge: 1,
       mastery: 0,

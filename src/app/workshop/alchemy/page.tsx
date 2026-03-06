@@ -150,17 +150,13 @@ export default function AlchemyPage() {
   } = useWorkshopGame();
   const [slots, setSlots] = useState<CircleSlot[]>(() => createEmptySlots());
   const [draggingMaterial, setDraggingMaterial] = useState<ResourceKey | null>(null);
-  const [resultText, setResultText] = useState("将材料卡片拖入魔法阵槽位，再执行炼成。");
+  const [resultText, setResultText] = useState("将材料卡片拖入魔法阵槽位，再执行炼成。")
   const [ritualFeedback, setRitualFeedback] = useState<RitualFeedback | null>(null);
   const [ringBurst, setRingBurst] = useState<RingBurstState>("none");
   const [materialQuery, setMaterialQuery] = useState("");
   const [materialSortMode, setMaterialSortMode] = useState<MaterialSortMode>("stock");
 
-  const effectiveSlots = useMemo(
-    () => normalizeSlots(slots, game.resources),
-    [slots, game.resources],
-  );
-
+  const effectiveSlots = useMemo(() => normalizeSlots(slots, game.resources), [slots, game.resources]);
   const offered = useMemo(() => slotsToOffer(effectiveSlots), [effectiveSlots]);
 
   const usedMaterials = useMemo(() => {
@@ -175,7 +171,7 @@ export default function AlchemyPage() {
 
   const inventoryRows = useMemo(() => {
     const keyword = materialQuery.trim();
-    const rows = CIRCLE_INPUT_ORDER.map((key) => {
+    return CIRCLE_INPUT_ORDER.map((key) => {
       const stock = game.resources[key];
       const used = usedMaterials[key] ?? 0;
       return {
@@ -197,8 +193,6 @@ export default function AlchemyPage() {
         }
         return right.available - left.available || right.value - left.value;
       });
-
-    return rows;
   }, [materialQuery, materialSortMode, game.resources, usedMaterials]);
 
   const offeredValue = useMemo(() => {
@@ -207,13 +201,9 @@ export default function AlchemyPage() {
     }, 0);
   }, [offered]);
 
-  const discoveredFormulas = useMemo(
-    () => new Set(game.discoveredFormulas),
-    [game.discoveredFormulas],
-  );
+  const discoveredFormulas = useMemo(() => new Set(game.discoveredFormulas), [game.discoveredFormulas]);
   const nextGuidance = getNextFormulaGuidance(game);
   const effectTotals = useMemo(() => getEffectTotals(game.activeEffects), [game.activeEffects]);
-  const predictedValue = offeredValue;
   const hasBlessing = effectTotals.toleranceBonus > 0 || effectTotals.yieldBonus > 0;
   const hasCurse = effectTotals.tolerancePenalty > 0;
   const ringEffectClass = hasCurse
@@ -330,11 +320,7 @@ export default function AlchemyPage() {
     setRitualFeedback({
       id: Date.now(),
       kind: result.success ? "success" : "failure",
-      body: result.success
-        ? producedSummary
-          ? `显化：${producedSummary}`
-          : "炼成完成"
-        : "阵纹紊乱",
+      body: result.success ? (producedSummary ? `显化：${producedSummary}` : "炼成完成") : "阵纹紊乱",
     });
     if (result.success) {
       setSlots(createEmptySlots());
@@ -342,286 +328,310 @@ export default function AlchemyPage() {
   }
 
   return (
-    <div className="alchemy-workbench">
-      <section className="game-panel reveal-up flex min-h-[calc(100dvh-8.5rem)] flex-col overflow-hidden rounded-2xl border border-[#8f7446]/45 bg-[#f6ead2]/95 p-4 shadow-[0_16px_36px_rgba(24,16,8,0.35)] sm:p-5">
-        <header className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-[#8f7446]/35 bg-[#fff6e3] p-3">
-          <div>
-            <h2 className="text-2xl font-semibold text-[#2d2112]">魔法阵炼金</h2>
-            <p className="mt-1 text-sm leading-7 text-[#4f3b1d]">
-              把任意材料拖入阵位，按等价交换规则随机显化产物；命中定式时必定炼出定式结果。
-            </p>
-          </div>
-          <div className="grid gap-1 text-right text-xs text-[#5d4825] sm:text-sm">
-            <p>
-              投入价值：<strong>{offeredValue}</strong>
-            </p>
-            <p>
-              预计显化价值：<strong>{predictedValue}</strong>
-            </p>
-            <p>今日行动：{game.actionsLeft}/3</p>
-          </div>
-        </header>
-
-        <div className="mt-4 grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_23rem]">
-          <div className="relative flex min-h-[21rem] items-center justify-center rounded-2xl border border-[#8f7446]/35 bg-[radial-gradient(circle_at_50%_30%,#fff4dd_0%,#f2e0bc_42%,#d2ad6b_100%)] px-2 py-3 shadow-[inset_0_0_0_2px_rgba(255,255,255,0.4)] sm:min-h-[23rem] sm:px-4">
-            <div
-              className={`alchemy-ring relative aspect-square w-full max-w-[30rem] ${ringEffectClass} ${ringBurstClass} sm:max-w-[32rem]`}
-            >
-              <div className="alchemy-ring__pulse" />
-              <div className="alchemy-ring__glow" />
-              <div className="alchemy-ring__burst" />
-              <div className="absolute inset-[14%] rounded-full border border-[#735630]/70" />
-              <div className="absolute inset-[28%] rounded-full border border-[#735630]/70" />
-              <div className="absolute inset-[42%] rounded-full border border-[#735630]/70" />
-
-              {effectiveSlots.map((slot, index) => (
-                <div
-                  key={`slot-${index}`}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={(event) => {
-                    event.preventDefault();
-                    const dropped = toResourceKey(event.dataTransfer.getData("text/plain"))
-                      ?? draggingMaterial;
-                    if (dropped) {
-                      setSlotMaterial(index, dropped);
-                    }
-                    setDraggingMaterial(null);
-                  }}
-                  className={`absolute ${SLOT_POSITIONS[index]} w-[5.6rem] rounded-lg border px-1.5 py-1 text-[10px] shadow-sm transition sm:w-[6.2rem] sm:px-2 sm:text-xs lg:w-[7rem] ${
-                    slot.material
-                      ? "alchemy-slot--filled border-[#6b5b37]/70 bg-[#fff8e6]/95"
-                      : "alchemy-slot--empty border-dashed border-[#8f7c57]/70 bg-[#fff9ed]/80"
-                  }`}
-                >
-                  {slot.material ? (
-                    <>
-                      <p className="font-semibold">
-                        {RESOURCE_LABELS[slot.material]}（{RESOURCE_VALUES[slot.material]}）
-                      </p>
-                      <input
-                        type="number"
-                        min={0}
-                        max={game.resources[slot.material]}
-                        value={slot.amount}
-                        onChange={(event) =>
-                          setSlotAmount(index, Number.parseInt(event.target.value || "0", 10) || 0)
-                        }
-                        className="mt-1 w-full rounded border border-[#88724a]/50 bg-[#fffdf8] px-1 py-0.5 text-xs"
-                      />
-                      <div className="mt-1 flex items-center justify-between gap-1">
-                        <span className="opacity-75">库存 {game.resources[slot.material]}</span>
-                        <button
-                          type="button"
-                          onClick={() => clearSlot(index)}
-                          className="game-button rounded border border-[#8c7752]/45 px-1 text-[10px] hover:bg-[#f1e4c5]"
-                        >
-                          清空
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <p className="py-3 text-center opacity-65">拖入</p>
-                  )}
-                </div>
-              ))}
-
-              <div className="pointer-events-none absolute left-1/2 top-[16%] -translate-x-1/2">
-                {game.activeEffects.length > 0 ? (
-                  <div className="flex flex-wrap justify-center gap-1 rounded border border-[#7f6b46]/45 bg-[#fff8e8]/90 px-2 py-1 text-[10px]">
-                    {game.activeEffects.map((effect) => (
-                      <span
-                        key={effect.id}
-                        className="rounded border border-[#8d7a56]/45 bg-[#fdf6e6] px-1.5 py-0.5"
-                      >
-                        {effect.kind === "tolerance_bonus"
-                          ? "T+"
-                          : effect.kind === "tolerance_penalty"
-                            ? "T-"
-                            : "Y+"}
-                        {effect.value} · {effect.remainingTransmutations}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              {ritualFeedback ? (
-                <div
-                  key={ritualFeedback.id}
-                  className={`ritual-feedback ritual-feedback--${ritualFeedback.kind}`}
-                >
-                  <p className="ritual-feedback__title">
-                    {ritualFeedback.kind === "success" ? "Ritual Complete" : "Ritual Disrupted"}
-                  </p>
-                  <p className="ritual-feedback__body">{ritualFeedback.body}</p>
-                </div>
-              ) : null}
-            </div>
-          </div>
-
-          <aside className="min-h-0 space-y-3 overflow-auto pr-1">
-            <details className="alchemy-fold" open>
-              <summary className="alchemy-fold__summary">背包与投料</summary>
-              <div className="alchemy-fold__content">
-                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                  <input
-                    type="text"
-                    value={materialQuery}
-                    onChange={(event) => setMaterialQuery(event.target.value)}
-                    placeholder="搜索材料"
-                    className="rounded-md border border-[#8c7548]/40 bg-[#fffdf6] px-2.5 py-1.5 text-sm text-[#3f2f18]"
-                  />
-                  <select
-                    value={materialSortMode}
-                    onChange={(event) => setMaterialSortMode(event.target.value as MaterialSortMode)}
-                    className="rounded-md border border-[#8c7548]/40 bg-[#fffdf6] px-2 py-1.5 text-sm text-[#3f2f18]"
-                  >
-                    <option value="stock">按可投数量</option>
-                    <option value="value">按价值</option>
-                    <option value="name">按名称</option>
-                  </select>
-                </div>
-                <ul className="mt-2 space-y-2">
-                  {inventoryRows.map((item) => (
-                    <li
-                      key={item.key}
-                      draggable={item.available > 0}
-                      onDragStart={(event) => {
-                        event.dataTransfer.setData("text/plain", item.key);
-                        setDraggingMaterial(item.key);
-                      }}
-                      onDragEnd={() => setDraggingMaterial(null)}
-                      className={`game-action-card rounded-lg border p-2 text-xs ${
-                        item.available > 0
-                          ? "cursor-grab border-[#7d6a45]/55 bg-[#fffdf5] hover:bg-[#f4e7ca]"
-                          : "cursor-not-allowed border-[#8f846f]/35 bg-[#f0e9d8] opacity-70"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-[#3f2f18]">
-                          {item.label}（{item.value}）
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => quickInsert(item.key)}
-                          disabled={item.available <= 0}
-                          className="game-button rounded border border-[#7d6a45]/45 px-1.5 py-0.5 text-[11px] hover:bg-[#f1e4c5] disabled:opacity-60"
-                        >
-                          放入空槽
-                        </button>
-                      </div>
-                      <p className="mt-1 text-[11px] text-[#4d3b1f]">
-                        库存 {item.stock} · 阵内占用 {item.used} · 可投 {item.available}
-                      </p>
-                    </li>
-                  ))}
-                  {inventoryRows.length === 0 ? (
-                    <li className="rounded-lg border border-dashed border-[#8f846f]/45 bg-[#f0e9d8] px-2 py-3 text-xs text-[#5e4d30]">
-                      未找到匹配材料。
-                    </li>
-                  ) : null}
-                </ul>
-              </div>
-            </details>
-
-            <details className="alchemy-fold">
-              <summary className="alchemy-fold__summary">炼金临时效应</summary>
-              <div className="alchemy-fold__content">
-                {game.activeEffects.length > 0 ? (
-                  <ul className="space-y-2 text-sm">
-                    {game.activeEffects.map((effect) => (
-                      <li
-                        key={effect.id}
-                        className="rounded border border-[#8b7954]/35 bg-[#fff8e8] p-2"
-                      >
-                        <p className="font-semibold">{effect.label}</p>
-                        <p className="mt-1 opacity-85">{effect.description}</p>
-                        <p className="text-xs opacity-75">剩余炼成：{effect.remainingTransmutations}</p>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm leading-7 opacity-80">
-                    当前无临时效应。你可在剧情页触发随机事件获得祝福或负面状态。
-                  </p>
-                )}
-              </div>
-            </details>
-
-            <details className="alchemy-fold">
-              <summary className="alchemy-fold__summary">定式图谱（必出）</summary>
-              <div className="alchemy-fold__content">
-                {nextGuidance ? (
-                  <div className="rounded border border-[#8b7954]/35 bg-[#fff8e8] p-2 text-sm">
-                    <p className="font-semibold">当前建议：{nextGuidance.formulaName}</p>
-                    <ul className="mt-1 list-disc pl-5">
-                      {nextGuidance.recommendations.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-                <ul className="mt-2 space-y-2 text-sm">
-                  {ARCANE_FORMULAS.map((formula) => {
-                    const unlocked = rankToIndex(game.rank) >= rankToIndex(formula.minRank);
-                    const discovered = discoveredFormulas.has(formula.id);
-                    return (
-                      <li
-                        key={formula.id}
-                        className={`rounded-lg border p-2 ${
-                          unlocked
-                            ? "border-[#7b6944]/50 bg-[#fff8e6]"
-                            : "border-[#8d7f63]/35 bg-[#f4ecda] opacity-70"
-                        }`}
-                      >
-                        <p className="font-semibold">{discovered ? formula.name : "未解析定式"}</p>
-                        <p className="mt-1 text-xs">
-                          需求境界：{formula.minRank}
-                          {unlocked ? "（可触发）" : "（未达成）"}
-                        </p>
-                        {discovered ? (
-                          <>
-                            <p className="mt-1 text-xs leading-6">
-                              材料：
-                              {Object.entries(formula.ingredients)
-                                .map(
-                                  ([key, value]) =>
-                                    `${RESOURCE_LABELS[key as ResourceKey]}x${value}`,
-                                )
-                                .join(" + ")}
-                            </p>
-                            <p className="text-xs leading-6">
-                              结果：{RESOURCE_LABELS[formula.output.resource]} x {formula.output.amount}
-                            </p>
-                          </>
-                        ) : (
-                          <p className="mt-1 text-xs leading-6 opacity-75">
-                            尚未破译。尝试接近正确组合，捕捉阵纹共振以解锁细节。
-                          </p>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </details>
-          </aside>
+    <div className="workshop-page alchemy-workbench">
+      <section className="workshop-hero-card reveal-up">
+        <p className="workshop-hero-card__eyebrow">Circle Hall</p>
+        <h2 className="workshop-hero-card__title">魔法阵炼金</h2>
+        <p className="workshop-hero-card__lead">
+          把材料拖入阵位，按等价交换原则显化产物。若你恰好命中定式，魔法阵会稳定地回应你。 
+        </p>
+        <div className="workshop-hero-card__meta">
+          <span className="workshop-pill">投入价值：{offeredValue}</span>
+          <span className="workshop-pill">今日行动：{game.actionsLeft}/3</span>
+          <span className="workshop-pill">临时效果：{game.activeEffects.length}</span>
+          <span className="workshop-pill">当前境界：{game.rank}</span>
         </div>
-
-        <div className="mt-4 grid gap-3 rounded-xl border border-[#8f7446]/35 bg-[#fff6e3] p-3 xl:grid-cols-[1fr_auto] xl:items-center">
-          <div className="rounded-lg border border-[#8f7446]/30 bg-[#fffdf6] p-2 text-sm leading-7 text-[#4f3b1d]">
-            {resultText}
-          </div>
-          <button
-            type="button"
-            onClick={onTransmute}
-            disabled={!canTransmute}
-            className="game-button rounded-lg border border-[#6b5b37] bg-[#ead8aa] px-4 py-2 text-sm font-semibold hover:bg-[#dfc993] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            刻印炼成
-          </button>
+        <div className="ritual-chip-row mt-4">
+          <span className="ritual-chip">主阵状态：{hasCurse ? "紊乱" : hasBlessing ? "受祝" : "平衡"}</span>
+          <span className="ritual-chip">已解定式：{game.discoveredFormulas.length}</span>
         </div>
       </section>
+
+      <div className="workshop-page__grid xl:grid-cols-[minmax(0,1fr)_23rem]">
+        <section className="space-y-4 reveal-up">
+          <article className="ritual-card rounded-2xl p-4 sm:p-5">
+            <p className="ritual-card__eyebrow">Ritual Status</p>
+            <h3 className="ritual-card__title">当前阵式</h3>
+            <p className="ritual-note">{resultText}</p>
+            <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_14rem]">
+              <div className="relative flex min-h-[22rem] items-center justify-center rounded-2xl border border-[#8f7446]/35 bg-[radial-gradient(circle_at_50%_30%,#fff4dd_0%,#f2e0bc_42%,#d2ad6b_100%)] px-1.5 py-2.5 shadow-[inset_0_0_0_2px_rgba(255,255,255,0.4)] sm:min-h-[30rem] sm:px-4">
+                <div className={`alchemy-ring relative aspect-square w-full max-w-[22rem] min-[420px]:max-w-[24rem] ${ringEffectClass} ${ringBurstClass} sm:max-w-[32rem]`}>
+                  <div className="alchemy-ring__pulse" />
+                  <div className="alchemy-ring__glow" />
+                  <div className="alchemy-ring__burst" />
+                  <div className="absolute inset-[14%] rounded-full border border-[#735630]/70" />
+                  <div className="absolute inset-[28%] rounded-full border border-[#735630]/70" />
+                  <div className="absolute inset-[42%] rounded-full border border-[#735630]/70" />
+
+                  {effectiveSlots.map((slot, index) => (
+                    <div
+                      key={`slot-${index}`}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        const dropped = toResourceKey(event.dataTransfer.getData("text/plain")) ?? draggingMaterial;
+                        if (dropped) {
+                          setSlotMaterial(index, dropped);
+                        }
+                        setDraggingMaterial(null);
+                      }}
+                      className={`absolute ${SLOT_POSITIONS[index]} w-[4.35rem] rounded-md border px-1 py-1 text-[9px] leading-tight shadow-sm transition sm:w-[6.2rem] sm:rounded-lg sm:px-2 sm:text-xs lg:w-[7rem] ${
+                        slot.material
+                          ? "alchemy-slot--filled border-[#6b5b37]/70 bg-[#fff8e6]/95"
+                          : "alchemy-slot--empty border-dashed border-[#8f7c57]/70 bg-[#fff9ed]/80"
+                      }`}
+                    >
+                      {slot.material ? (
+                        <>
+                          <p className="font-semibold">
+                            {RESOURCE_LABELS[slot.material]}（{RESOURCE_VALUES[slot.material]}）
+                          </p>
+                          <input
+                            type="number"
+                            min={0}
+                            max={game.resources[slot.material]}
+                            value={slot.amount}
+                            onChange={(event) =>
+                              setSlotAmount(index, Number.parseInt(event.target.value || "0", 10) || 0)
+                            }
+                            className="mt-1 w-full rounded border border-[#88724a]/50 bg-[#fffdf8] px-1 py-0.5 text-[11px] sm:text-xs"
+                          />
+                          <div className="mt-1 flex items-center justify-between gap-1">
+                            <span className="opacity-75">库存 {game.resources[slot.material]}</span>
+                            <button
+                              type="button"
+                              onClick={() => clearSlot(index)}
+                              className="game-button rounded border border-[#8c7752]/45 px-1 text-[9px] hover:bg-[#f1e4c5] sm:text-[10px]"
+                            >
+                              清空
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="py-2.5 text-center opacity-65">拖入</p>
+                      )}
+                    </div>
+                  ))}
+
+                  <div className="pointer-events-none absolute left-1/2 top-[16%] hidden -translate-x-1/2 sm:block">
+                    {game.activeEffects.length > 0 ? (
+                      <div className="flex flex-wrap justify-center gap-1 rounded border border-[#7f6b46]/45 bg-[#fff8e8]/90 px-2 py-1 text-[10px]">
+                        {game.activeEffects.map((effect) => (
+                          <span
+                            key={effect.id}
+                            className="rounded border border-[#8d7a56]/45 bg-[#fdf6e6] px-1.5 py-0.5"
+                          >
+                            {effect.kind === "tolerance_bonus"
+                              ? "高阶"
+                              : effect.kind === "tolerance_penalty"
+                                ? "杂质"
+                                : "细粒"}
+                            +{effect.value} · {effect.remainingTransmutations}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {ritualFeedback ? (
+                    <div key={ritualFeedback.id} className={`ritual-feedback ritual-feedback--${ritualFeedback.kind}`}>
+                      <p className="ritual-feedback__title">
+                        {ritualFeedback.kind === "success" ? "炼成完成" : "阵式紊乱"}
+                      </p>
+                      <p className="ritual-feedback__body">{ritualFeedback.body}</p>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="grid content-start gap-3">
+                <div className="ritual-stat-grid sm:grid-cols-2 xl:grid-cols-1">
+                  <div className="ritual-stat">
+                    <p className="ritual-stat__label">投入价值</p>
+                    <p className="ritual-stat__value">{offeredValue}</p>
+                  </div>
+                  <div className="ritual-stat">
+                    <p className="ritual-stat__label">行动余量</p>
+                    <p className="ritual-stat__value">{game.actionsLeft}/3</p>
+                  </div>
+                  <div className="ritual-stat">
+                    <p className="ritual-stat__label">已解定式</p>
+                    <p className="ritual-stat__value">{game.discoveredFormulas.length}</p>
+                  </div>
+                </div>
+                <div className="ritual-list__item text-sm leading-7 text-[#4d381c]">
+                  {hasCurse
+                    ? "阵式受紊乱残渣影响，更容易出现低阶杂质。"
+                    : hasBlessing
+                      ? "阵式正处于祝福窗口，更容易显化稳定或高阶产物。"
+                      : "当前阵式稳定，按标准等价交换执行。"}
+                </div>
+              </div>
+              <p className="mt-3 block text-xs leading-6 text-[#6a5330] sm:hidden">
+                小屏设备上优先使用右侧材料列表中的“放入空槽”，会比拖拽更稳定。
+              </p>
+            </div>
+          </article>
+
+          <article className="ritual-card rounded-2xl p-4 sm:p-5">
+            <p className="ritual-card__eyebrow">Ritual Commit</p>
+            <h3 className="ritual-card__title">执行炼成</h3>
+            <div className="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+              <div className="ritual-log-item text-sm leading-7 text-[#4f3b1d]">{resultText}</div>
+              <button
+                type="button"
+                onClick={onTransmute}
+                disabled={!canTransmute}
+                className="game-button w-full rounded-lg border border-[#6b5b37] bg-[#ead8aa] px-4 py-2 text-sm font-semibold hover:bg-[#dfc993] disabled:cursor-not-allowed disabled:opacity-60 xl:w-auto"
+              >
+                刻印炼成
+              </button>
+            </div>
+          </article>
+        </section>
+
+        <aside className="workshop-page__sidebar reveal-up reveal-delay-2">
+          <details className="alchemy-fold" open>
+            <summary className="alchemy-fold__summary">背包与投料</summary>
+            <div className="alchemy-fold__content">
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                <input
+                  type="text"
+                  value={materialQuery}
+                  onChange={(event) => setMaterialQuery(event.target.value)}
+                  placeholder="搜索材料"
+                  className="rounded-md border border-[#8c7548]/40 bg-[#fffdf6] px-2.5 py-1.5 text-sm text-[#3f2f18]"
+                />
+                <select
+                  value={materialSortMode}
+                  onChange={(event) => setMaterialSortMode(event.target.value as MaterialSortMode)}
+                  className="rounded-md border border-[#8c7548]/40 bg-[#fffdf6] px-2 py-1.5 text-sm text-[#3f2f18]"
+                >
+                  <option value="stock">按可投数量</option>
+                  <option value="value">按价值</option>
+                  <option value="name">按名称</option>
+                </select>
+              </div>
+              <ul className="mt-2 space-y-2">
+                {inventoryRows.map((item) => (
+                  <li
+                    key={item.key}
+                    draggable={item.available > 0}
+                    onDragStart={(event) => {
+                      event.dataTransfer.setData("text/plain", item.key);
+                      setDraggingMaterial(item.key);
+                    }}
+                    onDragEnd={() => setDraggingMaterial(null)}
+                    className={`game-action-card rounded-lg border p-2 text-xs ${
+                      item.available > 0
+                        ? "cursor-grab border-[#7d6a45]/55 bg-[#fffdf5] hover:bg-[#f4e7ca]"
+                        : "cursor-not-allowed border-[#8f846f]/35 bg-[#f0e9d8] opacity-70"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-semibold text-[#3f2f18]">
+                        {item.label}（{item.value}）
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => quickInsert(item.key)}
+                        disabled={item.available <= 0}
+                        className="game-button rounded border border-[#7d6a45]/45 px-1.5 py-0.5 text-[11px] hover:bg-[#f1e4c5] disabled:opacity-60"
+                      >
+                        放入空槽
+                      </button>
+                    </div>
+                    <p className="mt-1 text-[11px] text-[#4d3b1f]">
+                      库存 {item.stock} · 阵内占用 {item.used} · 可投 {item.available}
+                    </p>
+                  </li>
+                ))}
+                {inventoryRows.length === 0 ? (
+                  <li className="rounded-lg border border-dashed border-[#8f846f]/45 bg-[#f0e9d8] px-2 py-3 text-xs text-[#5e4d30]">
+                    未找到匹配材料。
+                  </li>
+                ) : null}
+              </ul>
+            </div>
+          </details>
+
+          <details className="alchemy-fold">
+            <summary className="alchemy-fold__summary">炼金临时效果</summary>
+            <div className="alchemy-fold__content">
+              {game.activeEffects.length > 0 ? (
+                <ul className="space-y-2 text-sm">
+                  {game.activeEffects.map((effect) => (
+                    <li key={effect.id} className="rounded border border-[#8b7954]/35 bg-[#fff8e8] p-2">
+                      <p className="font-semibold">{effect.label}</p>
+                      <p className="mt-1 opacity-85">{effect.description}</p>
+                      <p className="text-xs opacity-75">剩余炼成：{effect.remainingTransmutations}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm leading-7 opacity-80">
+                  当前没有临时效果。你可以先去剧情页触发异象，获得祝福或负面状态。
+                </p>
+              )}
+            </div>
+          </details>
+
+          <details className="alchemy-fold">
+            <summary className="alchemy-fold__summary">定式图谱（必出）</summary>
+            <div className="alchemy-fold__content">
+              {nextGuidance ? (
+                <div className="rounded border border-[#8b7954]/35 bg-[#fff8e8] p-2 text-sm">
+                  <p className="font-semibold">当前建议：{nextGuidance.formulaName}</p>
+                  <ul className="mt-1 list-disc pl-5">
+                    {nextGuidance.recommendations.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <ul className="mt-2 space-y-2 text-sm">
+                {ARCANE_FORMULAS.map((formula) => {
+                  const unlocked = rankToIndex(game.rank) >= rankToIndex(formula.minRank);
+                  const discovered = discoveredFormulas.has(formula.id);
+                  return (
+                    <li
+                      key={formula.id}
+                      className={`rounded-lg border p-2 ${
+                        unlocked
+                          ? "border-[#7b6944]/50 bg-[#fff8e6]"
+                          : "border-[#8d7f63]/35 bg-[#f4ecda] opacity-70"
+                      }`}
+                    >
+                      <p className="font-semibold">{discovered ? formula.name : "未解析定式"}</p>
+                      <p className="mt-1 text-xs">
+                        需求境界：{formula.minRank}
+                        {unlocked ? "（可触发）" : "（尚未达到）"}
+                      </p>
+                      {discovered ? (
+                        <>
+                          <p className="mt-1 text-xs leading-6">
+                            材料：
+                            {Object.entries(formula.ingredients)
+                              .map(([key, value]) => `${RESOURCE_LABELS[key as ResourceKey]}x${value}`)
+                              .join(" + ")}
+                          </p>
+                          <p className="text-xs leading-6">
+                            结果：{RESOURCE_LABELS[formula.output.resource]} x {formula.output.amount}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="mt-1 text-xs leading-6 opacity-75">
+                          尚未破译。尝试靠近正确组合，捕捉阵纹共振以解锁细节。
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </details>
+        </aside>
+      </div>
 
       <EventCinematicOverlay
         key={cinematicEvent?.id ?? "cinematic-none"}

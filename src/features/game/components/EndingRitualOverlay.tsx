@@ -24,7 +24,7 @@ export function EndingRitualOverlay({ ending, onClose }: EndingRitualOverlayProp
       "火、盐、硫、汞在阵心重叠。",
       "《翠玉录》的句式与你的呼吸完全一致。",
       "赤红光核凝固，贤者之石在你掌中稳定。",
-      `第 ${ending.day} 日，工坊记录你的终式：最强炼金术师。`,
+      `第 ${ending.day} 日，工坊记录下你的终式：至高炼金术师。`,
     ];
   }, [ending]);
 
@@ -50,13 +50,17 @@ export function EndingRitualOverlay({ ending, onClose }: EndingRitualOverlayProp
     <div className="ending-ritual-overlay">
       <div className="ending-ritual-overlay__backdrop" />
       <div className="ending-ritual-overlay__frame">
+        <div className="cinematic-frame__halo" aria-hidden />
+        <div className="cinematic-frame__seal" aria-hidden />
+        <div className="cinematic-frame__ornament cinematic-frame__ornament--left" aria-hidden />
+        <div className="cinematic-frame__ornament cinematic-frame__ornament--right" aria-hidden />
         <p className="ending-ritual-overlay__label">Grand Work</p>
         <h2 className="ending-ritual-overlay__title">贤者之石完成</h2>
         <div className="ending-ritual-overlay__lines">
           {lines.slice(0, stage).map((line) => (
             <p key={line}>{line}</p>
           ))}
-          {!finished ? <p className="ending-ritual-overlay__cursor">▋</p> : null}
+          {!finished ? <p className="ending-ritual-overlay__cursor">▍</p> : null}
         </div>
         <div className="ending-ritual-overlay__actions">
           {!finished ? (

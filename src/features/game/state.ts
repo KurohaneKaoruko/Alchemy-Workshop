@@ -165,7 +165,7 @@ export function consumeTransmutationEffects(state: GameState): GameState {
     createJournalEntry({
       day: state.day,
       type: "system",
-      title: "临时效应消散",
+      title: "临时效果消散",
       body: `${note} 的影响已经消退。`,
     }),
   );

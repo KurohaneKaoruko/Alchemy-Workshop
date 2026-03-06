@@ -25,7 +25,7 @@ export function WorkshopNav({ items }: WorkshopNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <button
         type="button"
         onClick={() => setMobileOpen((value) => !value)}
@@ -58,9 +58,7 @@ export function WorkshopNav({ items }: WorkshopNavProps) {
               key={item.href}
               href={item.href}
               className={`game-nav-chip rounded-md border px-3 py-1.5 text-sm ${
-                active
-                  ? "game-nav-chip--active border-[#e3bf78]"
-                  : "border-[#b79358]/45"
+                active ? "game-nav-chip--active border-[#e3bf78]" : "border-[#b79358]/45"
               }`}
             >
               {item.label}
@@ -70,7 +68,7 @@ export function WorkshopNav({ items }: WorkshopNavProps) {
       </nav>
 
       {mobileOpen ? (
-        <nav className="workshop-mobile-panel absolute right-0 top-11 z-30 grid min-w-[11rem] gap-1 rounded-lg border border-[#ad8749]/55 p-2 md:hidden">
+        <nav className="workshop-mobile-panel absolute right-0 top-11 z-30 grid min-w-[12rem] gap-1 rounded-lg border border-[#ad8749]/55 p-2 md:hidden">
           {items.map((item) => {
             const active = isItemActive(pathname, item.href);
             return (
@@ -78,13 +76,12 @@ export function WorkshopNav({ items }: WorkshopNavProps) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`game-nav-chip rounded-md border px-3 py-2 text-sm ${
-                  active
-                    ? "game-nav-chip--active border-[#e3bf78]"
-                    : "border-[#b79358]/45"
+                className={`game-nav-chip flex items-center justify-between rounded-md border px-3 py-2 text-sm ${
+                  active ? "game-nav-chip--active border-[#e3bf78]" : "border-[#b79358]/45"
                 }`}
               >
                 {item.label}
+                <span aria-hidden>{active ? "•" : "→"}</span>
               </Link>
             );
           })}

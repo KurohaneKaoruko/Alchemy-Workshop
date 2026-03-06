@@ -48,13 +48,17 @@ export function EventCinematicOverlay({ event, onClose }: EventCinematicOverlayP
     <div className="event-cinematic-overlay">
       <div className="event-cinematic-overlay__backdrop" />
       <div className="event-cinematic-overlay__frame">
+        <div className="cinematic-frame__halo" aria-hidden />
+        <div className="cinematic-frame__seal" aria-hidden />
+        <div className="cinematic-frame__ornament cinematic-frame__ornament--left" aria-hidden />
+        <div className="cinematic-frame__ornament cinematic-frame__ornament--right" aria-hidden />
         <p className="event-cinematic-overlay__source">
           {event.source === "ai" ? "AI 异象记录" : "工坊秘录"}
         </p>
         <h3 className="event-cinematic-overlay__title">{event.title}</h3>
         <p className="event-cinematic-overlay__text">
           {visibleText}
-          {isTyping ? <span className="event-cinematic-overlay__cursor">▋</span> : null}
+          {isTyping ? <span className="event-cinematic-overlay__cursor">▍</span> : null}
         </p>
         <div className="event-cinematic-overlay__actions">
           {isTyping ? (

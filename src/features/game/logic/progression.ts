@@ -5,12 +5,7 @@ import {
   createJournalEntry,
   withRankUnlockedRecipes,
 } from "@/features/game/state";
-import {
-  chance,
-  clamp,
-  mergeResourceDelta,
-  pickOne,
-} from "@/features/game/logic/utils";
+import { chance, clamp, mergeResourceDelta, pickOne } from "@/features/game/logic/utils";
 import type {
   ChapterChoice,
   ChapterChoiceAction,
@@ -46,7 +41,7 @@ const RANK_REQUIREMENTS: Record<Exclude<Rank, "学徒">, RankRequirement> = {
     reputation: 18,
     requireRecipe: "great_conjunction",
   },
-  最强炼金术师: {
+  至高炼金术师: {
     knowledge: 60,
     mastery: 60,
     reputation: 30,
@@ -75,7 +70,7 @@ export const STORY_DISCOVERY_RULES: StoryDiscoveryRule[] = [
     minMastery: 16,
     actions: ["study", "distill", "emerald_tablet"],
     chance: 0.42,
-    lore: "你在蒸汽与汞珠的相位延迟中，看到一条垂直升华的阶梯纹路。",
+    lore: "你在蒸汽与汞珠的相位延迟中，看见了一条垂直升华的阶梯纹路。",
   },
   {
     formulaId: "great_conjunction",
@@ -137,7 +132,6 @@ function applyStoryActionEffect(
       knowledgeGain = 2 + Math.floor(rng() * 3);
       masteryGain = 1 + Math.floor(rng() * 2);
       vigorDelta = -1;
-      resourceDelta = {};
       if (chance(rng, 0.3 + chapterDepth * 0.05)) {
         resourceDelta.aetherDust = (resourceDelta.aetherDust ?? 0) + 1;
       }
@@ -356,7 +350,7 @@ function maybeDiscoverFormulaByStory(
 
     return {
       state: next,
-      message: `你通过剧情推演破译了「${rule.formulaName}」定式线索。`,
+      message: `你通过剧情推演破译了「${rule.formulaName}」的线索。`,
     };
   }
 
@@ -376,7 +370,7 @@ export function evaluateRankProgression(
       break;
     }
 
-    if (target === "最强炼金术师") {
+    if (target === "至高炼金术师") {
       break;
     }
 
@@ -440,10 +434,9 @@ export function applyChapterChoice(
 
   const progression = evaluateRankProgression(next);
   next = progression.state;
-  const extraMessages = [
-    discovery.message,
-    ...progression.messages,
-  ].filter((item): item is string => Boolean(item));
+  const extraMessages = [discovery.message, ...progression.messages].filter(
+    (item): item is string => Boolean(item),
+  );
   const finalMessage =
     extraMessages.length > 0
       ? `${effectResult.message} ${extraMessages.join(" ")}`

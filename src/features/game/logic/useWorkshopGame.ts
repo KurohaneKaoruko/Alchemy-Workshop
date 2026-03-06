@@ -4,16 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { generateNarrativeFromApi } from "@/features/ai/client";
 import { applyEventOutcome, triggerRandomEvent } from "@/features/events/eventEngine";
 import { playSfx, type SfxCue } from "@/features/game/logic/sfx";
-import {
-  getCurrentChapter,
-  applyChapterChoice,
-  rankToIndex,
-} from "@/features/game/logic/progression";
-import {
-  transmuteByCircle,
-  type CircleRequest,
-  type CircleResult,
-} from "@/features/game/logic/alchemyCircle";
+import { getCurrentChapter, applyChapterChoice, rankToIndex } from "@/features/game/logic/progression";
+import { transmuteByCircle, type CircleRequest, type CircleResult } from "@/features/game/logic/alchemyCircle";
 import { createInitialGameState } from "@/features/game/state";
 import type { GameState, LastEventDigest, Rank } from "@/features/game/types";
 import {
@@ -60,8 +52,7 @@ export function useWorkshopGame() {
   const [aiSettings, setAiSettings] = useState<AiSettingsForm>(AI_SETTINGS_DEFAULTS);
   const [preferences, setPreferences] = useState<GamePreferences>(DEFAULT_GAME_PREFERENCES);
   const [cinematicEvent, setCinematicEvent] = useState<LastEventDigest | null>(null);
-  const [rankAscensionCinematic, setRankAscensionCinematic] =
-    useState<RankAscensionCinematic | null>(null);
+  const [rankAscensionCinematic, setRankAscensionCinematic] = useState<RankAscensionCinematic | null>(null);
   const [endingCinematic, setEndingCinematic] = useState<EndingCinematicState | null>(null);
   const lastSeenEventIdRef = useRef<string | null>(null);
   const previousRankRef = useRef<Rank | null>(null);
@@ -193,7 +184,7 @@ export function useWorkshopGame() {
       kind: "ending",
       title: "贤者之石完成",
       subtitle: "Grand Work",
-      body: `第 ${payload.day} 日，你完成赤红终式，成为最强炼金术师。`,
+      body: `第 ${payload.day} 日，你完成赤红终式，成为至高炼金术师。`,
       day: payload.day,
       source: "system",
       payload: {
@@ -238,7 +229,7 @@ export function useWorkshopGame() {
         resources: game.resources,
       });
     window.advanceTime = () => {
-      // 回合制文本游戏，无帧推进逻辑，保留空钩子给自动化测试。
+      // 回合制文字游戏无帧推进逻辑，保留空钩子给自动化测试使用。
     };
     return () => {
       delete window.render_game_to_text;
@@ -371,7 +362,7 @@ export function useWorkshopGame() {
     lastSeenEventIdRef.current = null;
     previousRankRef.current = next.rank;
     endingShownRef.current = false;
-    setStatusText("工坊已经重启，新的炼金日程开始。");
+    setStatusText("工坊已经重启，新的炼金日程开始。")
   }
 
   function dismissCinematicEvent(): void {

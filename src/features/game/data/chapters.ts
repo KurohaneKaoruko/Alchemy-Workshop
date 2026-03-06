@@ -13,7 +13,7 @@ export const CHAPTERS: ChapterData[] = [
         id: "apprentice-study",
         label: "研读残页",
         action: "study",
-        flavorText: "你逐字比对手稿，试图理解“上如其下”最初的含义。",
+        flavorText: "你逐字比对手稿，试图理解“其上如其下”最初的含义。",
       },
       {
         id: "apprentice-gather",
@@ -33,7 +33,7 @@ export const CHAPTERS: ChapterData[] = [
     id: "seven-seals",
     rank: "炼金士",
     title: "第二章：七重封印",
-    summary: "你开始接触更危险的仪式，需在秩序与欲望之间保持平衡。",
+    summary: "你开始接触更危险的仪式，需要在秩序与欲望之间保持平衡。",
     atmosphere:
       "石台上刻着七枚封印符号，风从通风井倒灌而下，带着硫与雨水气味。",
     choices: [
@@ -51,7 +51,7 @@ export const CHAPTERS: ChapterData[] = [
       },
       {
         id: "alchemist-meditate",
-        label: "夜半冥想",
+        label: "午夜冥想",
         action: "meditate",
         flavorText: "你在熄炉后静坐，听呼吸与炉壁余温同频。",
       },
@@ -103,7 +103,7 @@ export const CHAPTERS: ChapterData[] = [
         id: "candidate-lecture",
         label: "会盟答辩",
         action: "lecture",
-        flavorText: "你在会盟长桌前陈述理论，迎接质疑与赞叹。",
+        flavorText: "你在会盟长桌前陈述理论，迎接质疑与赞许。",
       },
       {
         id: "candidate-meditate",

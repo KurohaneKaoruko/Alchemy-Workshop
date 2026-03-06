@@ -22,7 +22,7 @@ const ASCENSION_QUOTES: Record<Rank, string> = {
   炼金士: "你已听见汞与硫的回声。",
   大炼金士: "炉环与你同频，秩序开始臣服。",
   贤者候补: "赤红之门已在你面前开启。",
-  最强炼金术师: "贤者之石与你同名。",
+  至高炼金术师: "贤者之石与你同名。",
 };
 
 export function RankAscensionOverlay({ ascension, onClose }: RankAscensionOverlayProps) {
@@ -44,6 +44,10 @@ export function RankAscensionOverlay({ ascension, onClose }: RankAscensionOverla
     <div className="rank-ascension-overlay">
       <div className="rank-ascension-overlay__backdrop" />
       <div className="rank-ascension-overlay__frame">
+        <div className="cinematic-frame__halo" aria-hidden />
+        <div className="cinematic-frame__seal" aria-hidden />
+        <div className="cinematic-frame__ornament cinematic-frame__ornament--left" aria-hidden />
+        <div className="cinematic-frame__ornament cinematic-frame__ornament--right" aria-hidden />
         <p className="rank-ascension-overlay__label">Ascension</p>
         <h3 className="rank-ascension-overlay__to">{ascension.to}</h3>
         <p className="rank-ascension-overlay__path">

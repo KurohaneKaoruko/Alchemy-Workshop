@@ -97,11 +97,7 @@ export function craftRecipe(
 
   const rankDepth = rankToIndex(state.rank);
   const successRate = clamp(
-    0.42 +
-      state.mastery * 0.005 +
-      state.knowledge * 0.0025 -
-      recipe.difficulty * 0.06 -
-      rankDepth * 0.01,
+    0.42 + state.mastery * 0.005 + state.knowledge * 0.0025 - recipe.difficulty * 0.06 - rankDepth * 0.01,
     0.1,
     0.92,
   );
@@ -141,13 +137,13 @@ export function craftRecipe(
       nextState = withRankUnlockedRecipes(
         {
           ...nextState,
-          rank: "最强炼金术师",
+          rank: "至高炼金术师",
           ended: true,
           ending: "philosopher_stone",
         },
-        "最强炼金术师",
+        "至高炼金术师",
       );
-      message = "赤红晶核彻底稳定，你炼出了贤者之石，成为最强炼金术师。";
+      message = "赤红晶核彻底稳定，你炼出了贤者之石，成为至高炼金术师。";
     }
   } else {
     nextState = {
@@ -167,7 +163,7 @@ export function craftRecipe(
       };
     }
 
-    message = "配方未能稳定，坩埚中只留下焦黑残渣。你记录了失败参数。";
+    message = "配方未能稳定，坩埚中只留下焦黑残渣。你记录下了失败参数。";
   }
 
   nextState = appendJournal(
