@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { generateNarrativeFromApi } from "@/features/ai/client";
+import { RESOURCE_LABELS } from "@/features/game/data/resourceMeta";
 import { RECIPES } from "@/features/game/data/recipes";
 import { craftRecipe } from "@/features/game/logic/crafting";
 import { applyChapterChoice, getCurrentChapter } from "@/features/game/logic/progression";
@@ -28,19 +29,6 @@ declare global {
     advanceTime?: (ms: number) => void;
   }
 }
-
-const RESOURCE_LABELS: Record<ResourceKey, string> = {
-  salt: "盐",
-  sulfur: "硫",
-  mercury: "汞",
-  ash: "草木灰",
-  ironSand: "赤铁砂",
-  moonDew: "月露",
-  sunShard: "日辉碎片",
-  aetherDust: "灵尘",
-  philosopherSeed: "贤者种",
-  philosopherStone: "贤者之石",
-};
 
 function renderResourceDelta(resource: Partial<Record<ResourceKey, number>>): string {
   const parts = Object.entries(resource)
@@ -215,7 +203,7 @@ export function GameClient() {
         <header className="rounded-2xl border border-[#6b5b37]/35 bg-[#f9f3e2]/95 p-5 shadow-[0_12px_24px_rgba(74,54,18,0.2)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="font-serif text-3xl font-semibold tracking-wide">极简炼金工坊</h1>
+              <h1 className="font-serif text-3xl font-semibold tracking-wide">炼金工坊</h1>
               <p className="mt-1 text-sm opacity-80">
                 {game.ended
                   ? "贤者之石已成，赤红完成。"

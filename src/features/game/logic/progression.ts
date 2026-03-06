@@ -137,9 +137,16 @@ function applyStoryActionEffect(
       knowledgeGain = 2 + Math.floor(rng() * 3);
       masteryGain = 1 + Math.floor(rng() * 2);
       vigorDelta = -1;
-      resourceDelta = chance(rng, 0.3 + chapterDepth * 0.05)
-        ? { aetherDust: 1 }
-        : {};
+      resourceDelta = {};
+      if (chance(rng, 0.3 + chapterDepth * 0.05)) {
+        resourceDelta.aetherDust = (resourceDelta.aetherDust ?? 0) + 1;
+      }
+      if (chance(rng, 0.24 + chapterDepth * 0.05)) {
+        resourceDelta.voidInk = (resourceDelta.voidInk ?? 0) + 1;
+      }
+      if (chance(rng, 0.18 + chapterDepth * 0.04)) {
+        resourceDelta.runeBone = (resourceDelta.runeBone ?? 0) + 1;
+      }
       break;
     case "gather":
       resourceDelta = {
@@ -152,6 +159,18 @@ function applyStoryActionEffect(
       if (chance(rng, 0.2 + chapterDepth * 0.05)) {
         resourceDelta.sunShard = (resourceDelta.sunShard ?? 0) + 1;
       }
+      if (chance(rng, 0.44 + chapterDepth * 0.05)) {
+        resourceDelta.herbEssence = (resourceDelta.herbEssence ?? 0) + 1;
+      }
+      if (chance(rng, 0.28 + chapterDepth * 0.04)) {
+        resourceDelta.obsidian = (resourceDelta.obsidian ?? 0) + 1;
+      }
+      if (chance(rng, 0.26 + chapterDepth * 0.05)) {
+        resourceDelta.silverLeaf = (resourceDelta.silverLeaf ?? 0) + 1;
+      }
+      if (chance(rng, 0.22 + chapterDepth * 0.04)) {
+        resourceDelta.mistPearl = (resourceDelta.mistPearl ?? 0) + 1;
+      }
       masteryGain = 1;
       vigorDelta = -1;
       break;
@@ -160,7 +179,18 @@ function applyStoryActionEffect(
       knowledgeGain = 1 + Math.floor(rng() * 2);
       vigorDelta = -2;
       if (chance(rng, 0.55 + chapterDepth * 0.05)) {
-        resourceDelta = { mercury: 1 + Math.floor(rng() * 2) };
+        resourceDelta = {
+          mercury: 1 + Math.floor(rng() * 2),
+        };
+        if (chance(rng, 0.46 + chapterDepth * 0.04)) {
+          resourceDelta.sulfur = (resourceDelta.sulfur ?? 0) + 1;
+        }
+        if (chance(rng, 0.22 + chapterDepth * 0.05)) {
+          resourceDelta.quicksilverBloom = (resourceDelta.quicksilverBloom ?? 0) + 1;
+        }
+        if (chance(rng, 0.2 + chapterDepth * 0.05)) {
+          resourceDelta.etherGlass = (resourceDelta.etherGlass ?? 0) + 1;
+        }
       } else {
         resourceDelta = { ash: 1 };
       }
@@ -172,11 +202,23 @@ function applyStoryActionEffect(
       if (chance(rng, 0.25 + chapterDepth * 0.08)) {
         resourceDelta = { sunShard: 1 };
       }
+      if (chance(rng, 0.18 + chapterDepth * 0.05)) {
+        resourceDelta.goldDust = (resourceDelta.goldDust ?? 0) + 1;
+      }
+      if (chance(rng, 0.12 + chapterDepth * 0.04)) {
+        resourceDelta.dragonScale = (resourceDelta.dragonScale ?? 0) + 1;
+      }
       break;
     case "meditate":
       masteryGain = 1 + Math.floor(rng() * 2);
       knowledgeGain = 1;
       vigorDelta = 2;
+      if (chance(rng, 0.34 + chapterDepth * 0.05)) {
+        resourceDelta.nightBloom = (resourceDelta.nightBloom ?? 0) + 1;
+      }
+      if (chance(rng, 0.18 + chapterDepth * 0.05)) {
+        resourceDelta.starlightThread = (resourceDelta.starlightThread ?? 0) + 1;
+      }
       break;
     case "emerald_tablet": {
       const threshold = 10 + chapterDepth * 8;
@@ -190,6 +232,9 @@ function applyStoryActionEffect(
       }
       if (chance(rng, 0.4)) {
         resourceDelta = { aetherDust: 1 };
+      }
+      if (chance(rng, 0.22 + chapterDepth * 0.04)) {
+        resourceDelta.runeBone = (resourceDelta.runeBone ?? 0) + 1;
       }
       break;
     }

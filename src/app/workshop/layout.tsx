@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
 import { RouteTransitionOverlay } from "@/features/game/components/RouteTransitionOverlay";
 import { WorkshopNav } from "@/features/game/components/WorkshopNav";
 
@@ -16,42 +15,31 @@ export default function WorkshopLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const embers = Array.from({ length: 18 }, (_, index) => {
-    const style = {
-      "--ember-left": `${(index * 17) % 100}%`,
-      "--ember-delay": `${(index % 7) * -1.25}s`,
-      "--ember-duration": `${9 + (index % 5) * 2.1}s`,
-      "--ember-size": `${4 + (index % 4) * 1.2}px`,
-    } as CSSProperties;
-    return <span key={`ember-${index}`} className="workshop-ember" style={style} />;
-  });
-
   return (
-    <div className="relative min-h-screen bg-[radial-gradient(circle_at_12%_8%,#f0e4c8_0%,#c9b183_40%,#7a6138_100%)] px-4 py-6 text-[#2f2413] sm:px-8">
-      <div className="workshop-ambient">
-        <div className="workshop-ambient__fog" />
-        <div className="workshop-ambient__runes" />
-        {embers}
-      </div>
+    <div className="workshop-shell">
+      <div className="workshop-shell__noise" />
+      <div className="workshop-shell__aura workshop-shell__aura--left" />
+      <div className="workshop-shell__aura workshop-shell__aura--right" />
 
-      <div className="relative mx-auto max-w-6xl">
-        <header className="game-panel reveal-up rounded-3xl border border-[#70592f]/45 bg-[#f9f1de]/90 p-5 shadow-[0_14px_26px_rgba(66,47,18,0.22)]">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.28em] text-[#6a5632]">Alchemy Workshop</p>
-              <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">极简炼金工坊</h1>
-            </div>
+      <div className="relative z-10 flex min-h-screen flex-col">
+        <header className="workshop-topbar reveal-up">
+          <Link href="/workshop" className="workshop-brand">
+            <p className="workshop-brand__subtitle">炼金术文字冒险</p>
+            <h1 className="workshop-brand__title">炼金工坊</h1>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <WorkshopNav items={NAV_ITEMS} />
             <Link
               href="/"
-              className="game-button rounded-lg border border-[#6b5b37] bg-[#efe3c4] px-3 py-1.5 text-sm hover:bg-[#e6d3a7]"
+              className="game-button hidden rounded-md border border-[#b79358]/50 bg-[#2f2418]/80 px-3 py-1.5 text-sm text-[#f2dfb8] hover:bg-[#443220] sm:inline-flex"
             >
-              返回首页
+              首页
             </Link>
           </div>
-          <WorkshopNav items={NAV_ITEMS} />
         </header>
 
-        <main className="mt-4 reveal-up reveal-delay-1">{children}</main>
+        <main className="workshop-main reveal-up reveal-delay-1">{children}</main>
       </div>
       <RouteTransitionOverlay />
     </div>

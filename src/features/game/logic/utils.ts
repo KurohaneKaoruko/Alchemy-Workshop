@@ -5,18 +5,10 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 export function createEmptyResources(): ResourcePool {
-  return {
-    salt: 0,
-    sulfur: 0,
-    mercury: 0,
-    ash: 0,
-    ironSand: 0,
-    moonDew: 0,
-    sunShard: 0,
-    aetherDust: 0,
-    philosopherSeed: 0,
-    philosopherStone: 0,
-  };
+  return RESOURCE_KEYS.reduce((acc, key) => {
+    acc[key] = 0;
+    return acc;
+  }, {} as ResourcePool);
 }
 
 export function mergeResourceDelta(

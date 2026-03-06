@@ -16,9 +16,17 @@ import type {
 export function createInitialGameState(): GameState {
   const baseResources = createEmptyResources();
   const seededResources: Partial<ResourcePool> = {
-    ash: 3,
-    ironSand: 3,
+    ash: 4,
+    ironSand: 4,
+    salt: 2,
+    copperFilings: 2,
+    sulfur: 1,
+    herbEssence: 2,
+    mercury: 1,
     moonDew: 2,
+    obsidian: 1,
+    crystalShard: 1,
+    lotusResin: 1,
   };
 
   return {
