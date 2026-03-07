@@ -50,7 +50,7 @@ export default function WorkshopLayout({
           </div>
         </header>
 
-        <main className="workshop-main reveal-up reveal-delay-1">
+        <main className="workshop-main">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </div>
