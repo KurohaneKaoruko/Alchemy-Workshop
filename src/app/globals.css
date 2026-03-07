@@ -1539,117 +1539,231 @@ input[type="checkbox"] {
 
 @media (min-width: 1280px) {
   .alchemy-workbench .workshop-page__grid {
-    gap: 0.85rem;
-    grid-template-columns: minmax(0, 1fr) 20.25rem;
+    gap: 0.7rem;
+    grid-template-columns: minmax(0, 1fr) 18.9rem;
+  }
+
+  .alchemy-workbench__main {
+    gap: 0.6rem;
   }
 
   .alchemy-workbench__hero {
-    padding: 0.72rem 0.92rem;
+    display: flex;
+    align-items: center;
+    gap: 0.68rem;
+    padding: 0.56rem 0.76rem;
+  }
+
+  .alchemy-workbench__hero .workshop-hero-card__eyebrow {
+    display: none;
+  }
+
+  .alchemy-workbench__hero .workshop-hero-card__title {
+    margin: 0;
+    flex: 0 0 auto;
+    font-size: 1.06rem;
+    line-height: 1;
   }
 
   .alchemy-workbench__hero .workshop-hero-card__lead {
-    margin-top: 0.46rem;
-    font-size: 0.9rem;
-    line-height: 1.54;
+    flex: 1;
+    margin: 0;
+    max-width: none;
+    overflow: hidden;
+    font-size: 0.74rem;
+    line-height: 1.32;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .alchemy-hero-strip {
-    margin-top: 0.5rem;
-    gap: 0.3rem;
+    flex: 0 0 auto;
+    margin-top: 0;
+    gap: 0.24rem;
   }
 
   .alchemy-hero-token {
-    min-height: 1.48rem;
-    padding: 0.1rem 0.38rem;
-    font-size: 0.66rem;
+    min-height: 1.34rem;
+    padding: 0.08rem 0.34rem;
+    font-size: 0.62rem;
   }
 
   .alchemy-status-card {
-    padding: 0.9rem 0.96rem;
+    padding: 0.68rem 0.76rem;
   }
 
-  .alchemy-status-board--lead {
-    grid-template-columns: 12.5rem minmax(0, 1fr);
+  .alchemy-status-head {
+    align-items: center;
     gap: 0.55rem;
   }
 
+  .alchemy-status-head__copy {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .alchemy-status-head__copy .ritual-card__eyebrow {
+    display: none;
+  }
+
+  .alchemy-status-head__copy .ritual-card__title {
+    margin: 0;
+    flex: 0 0 auto;
+    font-size: 1.18rem;
+    line-height: 1;
+  }
+
+  .alchemy-status-head__summary {
+    flex: 1;
+    min-width: 0;
+    gap: 0.22rem;
+    margin: 0;
+    font-size: 0.7rem;
+  }
+
+  .alchemy-status-signature {
+    min-height: 1.2rem;
+    padding: 0.04rem 0.34rem;
+    font-size: 0.62rem;
+  }
+
+  .alchemy-status-badge {
+    min-height: 1.42rem;
+    padding: 0.08rem 0.5rem;
+    font-size: 0.66rem;
+  }
+
+  .alchemy-status-board--lead {
+    grid-template-columns: 10.5rem minmax(0, 1fr);
+    gap: 0.45rem;
+    margin-top: 0.45rem;
+  }
+
   .alchemy-status-panel {
-    padding: 0.56rem 0.62rem;
+    padding: 0.45rem 0.52rem;
+  }
+
+  .alchemy-status-panel--loadout {
+    align-self: start;
+  }
+
+  .alchemy-loadout {
+    gap: 0.2rem;
+  }
+
+  .alchemy-loadout__head {
+    gap: 0.38rem;
+  }
+
+  .alchemy-loadout__label {
+    font-size: 0.62rem;
+  }
+
+  .alchemy-loadout__compact {
+    display: block;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.66rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: rgba(79, 59, 30, 0.72);
+  }
+
+  .alchemy-loadout__summary {
+    min-height: 1.2rem;
+    padding: 0.02rem 0.34rem;
+    font-size: 0.62rem;
   }
 
   .alchemy-loadout__chips {
-    gap: 0.28rem;
-  }
-
-  .alchemy-loadout__chip,
-  .alchemy-loadout__empty,
-  .alchemy-loadout__more {
-    min-height: 1.5rem;
-    padding: 0.14rem 0.46rem;
-    font-size: 0.67rem;
+    display: none;
   }
 
   .alchemy-quick-picks {
-    gap: 0.36rem;
+    gap: 0.24rem;
+  }
+
+  .alchemy-quick-picks__header {
+    gap: 0.4rem;
+  }
+
+  .alchemy-quick-picks__label {
+    font-size: 0.62rem;
   }
 
   .alchemy-quick-picks__hint {
-    margin-top: 0.1rem;
-    font-size: 0.68rem;
+    margin-top: 0;
+    overflow: hidden;
+    font-size: 0.63rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .alchemy-quick-picks__list {
     flex-wrap: nowrap;
+    gap: 0.3rem;
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    padding-bottom: 0.14rem;
+    padding-bottom: 0.08rem;
   }
 
   .alchemy-quick-picks__item {
-    flex: 0 0 7.1rem;
-    min-width: 7.1rem;
-    padding: 0.42rem 0.5rem;
-    gap: 0.08rem;
-    border-radius: 0.84rem;
+    display: inline-flex;
+    flex: 0 0 auto;
+    min-width: auto;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.24rem 0.42rem;
+    border-radius: 0.78rem;
+  }
+
+  .alchemy-quick-picks__item > span:first-child {
+    font-size: 0.68rem;
+    font-weight: 600;
+    white-space: nowrap;
   }
 
   .alchemy-quick-picks__tag {
-    min-height: 1.04rem;
-    padding: 0.02rem 0.28rem;
+    min-height: 1rem;
+    padding: 0.02rem 0.24rem;
     font-size: 0.54rem;
   }
 
   .alchemy-quick-picks__note,
   .alchemy-quick-picks__stock {
-    font-size: 0.62rem;
+    display: none;
   }
 
   .alchemy-ring-stage {
-    margin-top: 0.56rem;
-    grid-template-columns: minmax(0, 1fr) 12.75rem;
-    gap: 0.75rem;
+    margin-top: 0.4rem;
+    grid-template-columns: minmax(0, 1fr) 12rem;
+    gap: 0.58rem;
     align-items: start;
   }
 
   .alchemy-ring-altar {
-    min-height: 22rem;
-    padding: 0.45rem 0.6rem;
+    min-height: 20rem;
+    padding: 0.32rem 0.44rem;
   }
 
   .alchemy-ring-altar .alchemy-ring {
-    max-width: min(100%, 25.5rem);
+    max-width: min(100%, 23.8rem);
   }
 
   .alchemy-ring-stage__console {
-    gap: 0.7rem;
-    max-height: calc(100dvh - 10rem);
+    gap: 0.55rem;
+    max-height: calc(100dvh - 8.7rem);
     overflow: auto;
     padding-right: 0.12rem;
   }
 
   .alchemy-slot-editor {
-    gap: 0.58rem;
-    padding: 0.7rem 0.74rem;
+    gap: 0.46rem;
+    padding: 0.58rem 0.62rem;
   }
 
   .alchemy-slot-editor__status {
@@ -1663,8 +1777,8 @@ input[type="checkbox"] {
   }
 
   .alchemy-slot-editor__formula-progress {
-    gap: 0.48rem;
-    padding: 0.56rem 0.6rem;
+    gap: 0.42rem;
+    padding: 0.5rem 0.54rem;
   }
 
   .alchemy-slot-editor__formula-progress-grid {
@@ -1674,7 +1788,7 @@ input[type="checkbox"] {
 
   .alchemy-slot-editor__formula-progress-item,
   .alchemy-slot-editor__recommend-item {
-    padding: 0.42rem 0.5rem;
+    padding: 0.38rem 0.44rem;
   }
 
   .alchemy-slot-editor__desktop-actions {
@@ -1685,20 +1799,20 @@ input[type="checkbox"] {
   }
 
   .alchemy-workbench .workshop-page__sidebar {
-    gap: 0.75rem;
-    max-height: calc(100dvh - 8.8rem);
+    gap: 0.6rem;
+    max-height: calc(100dvh - 8.2rem);
     overflow: auto;
     padding-right: 0.14rem;
   }
 
   .alchemy-fold__summary {
-    padding: 0.54rem 0.68rem;
-    font-size: 0.8rem;
+    padding: 0.46rem 0.58rem;
+    font-size: 0.74rem;
   }
 
   .alchemy-fold__content {
-    max-height: min(34dvh, 21rem);
-    padding: 0.6rem;
+    max-height: min(31dvh, 18rem);
+    padding: 0.52rem;
   }
 }
 

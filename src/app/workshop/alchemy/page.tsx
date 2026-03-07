@@ -983,7 +983,7 @@ export default function AlchemyPage() {
         <section className="alchemy-workbench__main space-y-3 sm:space-y-4 reveal-up">
 	          <article className="ritual-card rounded-2xl p-4 sm:p-5 alchemy-status-card">
 	            <div className="alchemy-status-head">
-	              <div>
+	              <div className="alchemy-status-head__copy">
 	                <p className="ritual-card__eyebrow">Ritual Status</p>
 	                <h3 className="ritual-card__title">当前阵式</h3>
 	                <p className="alchemy-status-head__summary" title={`目标定式：${formulaTargetLabel} · ${slotTargetHint}`}>
@@ -999,7 +999,7 @@ export default function AlchemyPage() {
 		              </div>
 		            </div>
 	            <div className="alchemy-status-board alchemy-status-board--lead">
-	              <div className="alchemy-status-panel">
+	              <div className="alchemy-status-panel alchemy-status-panel--loadout">
 	                <div className="alchemy-loadout">
 	                  <div className="alchemy-loadout__head">
 	                    <p className="alchemy-loadout__label">当前投料</p>
