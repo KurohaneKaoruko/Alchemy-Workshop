@@ -24,6 +24,15 @@ type RankRequirement = {
   requireRecipe?: string;
 };
 
+export interface NextRankGoal {
+  targetRank: Rank;
+  knowledge: number;
+  mastery: number;
+  reputation: number;
+  requireRecipe?: string;
+  ready: boolean;
+}
+
 const RANK_REQUIREMENTS: Record<Exclude<Rank, "学徒">, RankRequirement> = {
   炼金士: {
     knowledge: 10,
@@ -102,6 +111,27 @@ export function getStoryDiscoveryRule(formulaId: string): StoryDiscoveryRule | u
 
 export function rankToIndex(rank: Rank): number {
   return RANK_ORDER.indexOf(rank);
+}
+
+export function getNextRankGoal(state: GameState): NextRankGoal | null {
+  const targetRank = RANK_ORDER[rankToIndex(state.rank) + 1];
+  if (!targetRank || targetRank === "学徒") {
+    return null;
+  }
+
+  const requirement = RANK_REQUIREMENTS[targetRank];
+  if (!requirement) {
+    return null;
+  }
+
+  return {
+    targetRank,
+    knowledge: requirement.knowledge,
+    mastery: requirement.mastery,
+    reputation: requirement.reputation,
+    requireRecipe: requirement.requireRecipe,
+    ready: canRankUp(state, targetRank),
+  };
 }
 
 export function getCurrentChapter(state: GameState): ChapterData {

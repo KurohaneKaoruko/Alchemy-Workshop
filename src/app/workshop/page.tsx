@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { GrandWorkAgenda } from "@/features/game/components/GrandWorkAgenda";
 import { RESOURCE_LABELS } from "@/features/game/data/resourceMeta";
 import { useWorkshopGame } from "@/features/game/logic/useWorkshopGame";
 
@@ -79,6 +80,8 @@ export default function WorkshopPage() {
         </div>
         <p className="ritual-note">{statusText}</p>
       </section>
+
+      <GrandWorkAgenda game={game} currentRoute="overview" />
 
       <div className="workshop-page__grid xl:grid-cols-[minmax(0,1.15fr)_22rem]">
         <section className="space-y-4">

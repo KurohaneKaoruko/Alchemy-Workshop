@@ -4,9 +4,12 @@ import type { AiEventRequestBody } from "@/features/ai/types";
 const SYSTEM_PROMPT = [
   "你是炼金术题材文字冒险事件生成器。",
   "请使用庄重神秘的中文文风。",
-  "只输出一个短事件正文，不要使用列表，不要解释规则，不要出现JSON。",
+  "不要使用列表，不要解释规则，不要出现JSON。",
   "文本长度控制在60到180字，必须包含炼金术意象（火候、坩埚、封印、翠玉录等任意元素）。",
   "避免现代互联网术语。",
+  "严格按以下格式输出：",
+  "标题：不超过16字，不要与正文首句完全重复。",
+  "正文：一段到两段连续叙述。",
 ].join("\n");
 
 function normalizeBaseUrl(baseUrl?: string): string {
@@ -25,7 +28,19 @@ function deriveTitle(content: string): string {
   if (!sentence) {
     return "炼金异象";
   }
-  return sentence.slice(0, 20);
+
+  const clauses = sentence
+    .split(/[，、；：,:]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const preferred = clauses.find((part) => part.length >= 4 && part.length <= 16);
+  if (preferred) {
+    return preferred;
+  }
+
+  const fallback = clauses.find((part) => part.length >= 4) ?? sentence.trim();
+  return fallback.slice(0, 18);
 }
 
 function sanitizeContent(content: string): string {
@@ -34,6 +49,52 @@ function sanitizeContent(content: string): string {
     .replace(/\r/g, "")
     .trim()
     .slice(0, 260);
+}
+
+function parseNarrativeContent(rawContent: string): { title: string; body: string } {
+  const cleaned = sanitizeContent(rawContent);
+  if (!cleaned) {
+    return {
+      title: "炼金异象",
+      body: "",
+    };
+  }
+
+  const labelled = cleaned.match(/^\s*标题[:：]\s*(.+?)\s*(?:\n+|\r\n+)\s*正文[:：]\s*([\s\S]+)$/);
+  if (labelled) {
+    return {
+      title: labelled[1].trim().slice(0, 40),
+      body: labelled[2].trim(),
+    };
+  }
+
+  const inlineBold = cleaned.match(/^\s*\*\*(.+?)\*\*[：:\s-]*([\s\S]*)$/);
+  if (inlineBold) {
+    const body = inlineBold[2].trim();
+    if (body) {
+      return {
+        title: inlineBold[1].trim().slice(0, 40),
+        body,
+      };
+    }
+  }
+
+  const lines = cleaned
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length > 1 && lines[0].length <= 24) {
+    return {
+      title: lines[0].replace(/^#+\s*/, "").trim().slice(0, 40),
+      body: lines.slice(1).join("\n\n").trim(),
+    };
+  }
+
+  return {
+    title: deriveTitle(cleaned),
+    body: cleaned,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -106,7 +167,8 @@ export async function POST(request: NextRequest) {
     };
 
     const rawContent = data.choices?.[0]?.message?.content ?? "";
-    const body = sanitizeContent(rawContent);
+    const parsed = parseNarrativeContent(rawContent);
+    const body = parsed.body;
 
     if (!body) {
       return NextResponse.json(
@@ -118,7 +180,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      title: deriveTitle(body),
+      title: parsed.title,
       body,
       tags: ["ai", "alchemy"],
     });

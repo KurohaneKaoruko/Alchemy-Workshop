@@ -8,6 +8,7 @@ import {
 } from "@/features/game/components/ChapterIntroOverlay";
 import { EndingRitualOverlay } from "@/features/game/components/EndingRitualOverlay";
 import { EventCinematicOverlay } from "@/features/game/components/EventCinematicOverlay";
+import { GrandWorkAgenda } from "@/features/game/components/GrandWorkAgenda";
 import { RankAscensionOverlay } from "@/features/game/components/RankAscensionOverlay";
 import { useWorkshopGame } from "@/features/game/logic/useWorkshopGame";
 import { addCinematicArchiveEntry } from "@/features/storage/cinematicArchive";
@@ -102,6 +103,8 @@ export default function StoryPage() {
         </div>
         <p className="ritual-note">{chapter.atmosphere}</p>
       </section>
+
+      <GrandWorkAgenda game={game} currentRoute="story" />
 
       <div className="workshop-page__grid lg:grid-cols-[minmax(0,1.2fr)_22rem]">
         <section className="space-y-4 reveal-up">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, createElement, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { generateNarrativeFromApi } from "@/features/ai/client";
 import { applyEventOutcome, triggerRandomEvent } from "@/features/events/eventEngine";
 import { playSfx, type SfxCue } from "@/features/game/logic/sfx";
@@ -44,7 +44,7 @@ interface EndingCinematicState {
   ending: "philosopher_stone";
 }
 
-export function useWorkshopGame() {
+function useWorkshopGameState() {
   const [game, setGame] = useState<GameState>(() => createInitialGameState());
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
@@ -402,4 +402,21 @@ export function useWorkshopGame() {
     dismissRankAscensionCinematic,
     dismissEndingCinematic,
   };
+}
+
+type WorkshopGameContextValue = ReturnType<typeof useWorkshopGameState>;
+
+const WorkshopGameContext = createContext<WorkshopGameContextValue | null>(null);
+
+export function WorkshopGameProvider({ children }: { children: ReactNode }) {
+  const value = useWorkshopGameState();
+  return createElement(WorkshopGameContext.Provider, { value }, children);
+}
+
+export function useWorkshopGame() {
+  const context = useContext(WorkshopGameContext);
+  if (!context) {
+    throw new Error("useWorkshopGame 必须在 WorkshopGameProvider 内使用。");
+  }
+  return context;
 }

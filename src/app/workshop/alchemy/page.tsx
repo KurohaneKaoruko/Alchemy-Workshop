@@ -49,9 +49,11 @@ interface NearHandReport {
   title: string;
   detail: string;
   meta?: string;
+  fullDetail?: string;
 }
 
 type RingBurstState = "none" | "success" | "fail";
+type DesktopWorkbenchTab = "control" | "inventory" | "reference";
 
 function getEffectTotals(
   effects: Array<{
@@ -143,6 +145,24 @@ function toResourceKey(value: string | null | undefined): ResourceKey | null {
   return RESOURCE_KEY_SET.has(value as ResourceKey) ? (value as ResourceKey) : null;
 }
 
+function compactReportText(text: string, maxLength = 42): string {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (!normalized) {
+    return "";
+  }
+
+  const firstSentence = normalized.split(/[。！？]/).find((segment) => segment.trim());
+  if (firstSentence && firstSentence.trim().length <= maxLength) {
+    return firstSentence.trim();
+  }
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength).trimEnd()}…`;
+}
+
 export default function AlchemyPage() {
   const initialResultText = "将材料卡片拖入魔法阵槽位，再执行炼成。";
   const {
@@ -163,12 +183,15 @@ export default function AlchemyPage() {
     title: "等待刻印",
     detail: initialResultText,
   });
+  const [reportExpanded, setReportExpanded] = useState(false);
   const [ritualFeedback, setRitualFeedback] = useState<RitualFeedback | null>(null);
   const [ringBurst, setRingBurst] = useState<RingBurstState>("none");
   const [materialQuery, setMaterialQuery] = useState("");
   const [materialSortMode, setMaterialSortMode] = useState<MaterialSortMode>("stock");
   const [mobileInventoryOpen, setMobileInventoryOpen] = useState(false);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+  const [desktopWorkbenchTab, setDesktopWorkbenchTab] = useState<DesktopWorkbenchTab>("control");
+  const [isDesktopWorkbench, setIsDesktopWorkbench] = useState(false);
   const ringStageRef = useRef<HTMLDivElement | null>(null);
 
   const effectiveSlots = useMemo(() => normalizeSlots(slots, game.resources), [slots, game.resources]);
@@ -412,6 +435,57 @@ export default function AlchemyPage() {
         return right.available - left.available || right.value - left.value;
       });
   }, [inventoryBaseRows, formulaProgressRows, formulaAssistAction, selectedSlot, selectedSlotIndex, materialSortMode]);
+  const inventorySections = useMemo(() => {
+    const slotRows = guidedInventoryRows.filter((item) => item.selectedStage !== "none");
+    const formulaRows = guidedInventoryRows.filter(
+      (item) => item.selectedStage === "none" && (item.isNextAssist || item.formulaStage === "missing"),
+    );
+    const reserveRows = guidedInventoryRows.filter(
+      (item) => item.selectedStage === "none" && !item.isNextAssist && item.formulaStage !== "missing",
+    );
+    const sections: Array<{
+      id: "slot" | "formula" | "reserve";
+      title: string;
+      copy: string;
+      rows: typeof guidedInventoryRows;
+    }> = [];
+
+    if (slotRows.length > 0) {
+      sections.push({
+        id: "slot",
+        title: selectedSlot?.material ? "当前槽补量" : "当前槽优先",
+        copy: selectedSlot?.material
+          ? `先处理第 ${selectedSlotIndex! + 1} 槽的 ${RESOURCE_LABELS[selectedSlot.material]}。`
+          : `第 ${selectedSlotIndex! + 1} 槽空置，先决定要投入的第一味材料。`,
+        rows: slotRows,
+      });
+    }
+
+    if (formulaRows.length > 0) {
+      sections.push({
+        id: "formula",
+        title: "定式缺口",
+        copy:
+          formulaTarget && formulaTarget.foreignCount === 0
+            ? `这些材料会继续把阵式推向「${formulaTarget.formula.name}」。`
+            : "这些材料最接近当前可稳定显化的定式。",
+        rows: formulaRows,
+      });
+    }
+
+    if (reserveRows.length > 0) {
+      sections.push({
+        id: "reserve",
+        title: "备用材料",
+        copy: materialQuery.trim()
+          ? "其余搜索结果在这里，可用于改配或替换。"
+          : "这些材料暂不直接影响当前槽位，可用于改配或自由试配。",
+        rows: reserveRows,
+      });
+    }
+
+    return sections;
+  }, [formulaTarget, guidedInventoryRows, materialQuery, selectedSlot, selectedSlotIndex]);
   const inventoryGuideCopy = useMemo(() => {
     if (selectedSlot?.material) {
       return `当前正聚焦第 ${selectedSlotIndex! + 1} 槽，优先为 ${RESOURCE_LABELS[selectedSlot.material]} 补量或替换。`;
@@ -442,6 +516,8 @@ export default function AlchemyPage() {
   const statusBadgeText = useMemo(() => {
     return formulaTargetHint ? `${nearHandReport.title} · ${formulaTargetHint}` : nearHandReport.title;
   }, [nearHandReport.title, formulaTargetHint]);
+  const isWorkbenchIdle =
+    selectedSlotIndex === null && nearHandReport.tone === "neutral" && nearHandReport.title === "等待刻印";
   const quickAccessMaterials = useMemo(() => {
     return inventoryBaseRows
       .filter((item) => item.available > 0)
@@ -566,6 +642,9 @@ export default function AlchemyPage() {
         ? "alchemy-ring--burst-fail"
         : "";
   const canTransmute = !busy && !game.ended && game.actionsLeft > 0;
+  const canExpandReport = useMemo(() => {
+    return Boolean(nearHandReport.fullDetail && nearHandReport.fullDetail !== nearHandReport.detail);
+  }, [nearHandReport.detail, nearHandReport.fullDetail]);
   const actionBarMessage = useMemo(() => {
     if (busy) {
       return "炼成中";
@@ -608,6 +687,44 @@ export default function AlchemyPage() {
     return () => window.clearTimeout(timer);
   }, [ringBurst]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const media = window.matchMedia("(min-width: 1280px)");
+    const syncDesktopWorkbench = () => {
+      setIsDesktopWorkbench(media.matches);
+    };
+    syncDesktopWorkbench();
+    media.addEventListener("change", syncDesktopWorkbench);
+    return () => {
+      media.removeEventListener("change", syncDesktopWorkbench);
+    };
+  }, []);
+
+  function focusWorkbenchTab(tab: DesktopWorkbenchTab) {
+    if (isDesktopWorkbench) {
+      setDesktopWorkbenchTab(tab);
+    }
+  }
+
+  function focusWorkbenchControl() {
+    focusWorkbenchTab("control");
+  }
+
+  function openInventoryIntake() {
+    if (isDesktopWorkbench) {
+      setDesktopWorkbenchTab("inventory");
+      return;
+    }
+    setMobileInventoryOpen(true);
+  }
+
+  function focusWorkbenchSlot(index: number) {
+    setSelectedSlotIndex(index);
+    focusWorkbenchControl();
+  }
+
   function getUsedByOtherSlots(material: ResourceKey, excludeIndex: number, list: CircleSlot[]): number {
     return list.reduce((sum, slot, index) => {
       if (index === excludeIndex || slot.material !== material) {
@@ -618,6 +735,7 @@ export default function AlchemyPage() {
   }
 
   function publishNearHandResult(detail: string, report?: NearHandReport) {
+    setReportExpanded(false);
     setNearHandReport(
       report ?? {
         tone: "neutral",
@@ -766,18 +884,22 @@ export default function AlchemyPage() {
   }
 
   function handleInventoryInsert(material: ResourceKey, closeAfterInsert = false) {
+    const wasTargetingSpecificSlot = selectedSlotIndex !== null;
     const inserted = insertIntoPreferredSlot(material);
     if (inserted && closeAfterInsert) {
       setMobileInventoryOpen(false);
     }
     if (inserted) {
+      if (wasTargetingSpecificSlot) {
+        focusWorkbenchControl();
+      }
       focusRingStage();
     }
   }
 
   function focusSelectedOrNextEmptySlot() {
     const nextEmptyIndex = effectiveSlots.findIndex((slot) => !slot.material);
-    setSelectedSlotIndex(nextEmptyIndex >= 0 ? nextEmptyIndex : 0);
+    focusWorkbenchSlot(nextEmptyIndex >= 0 ? nextEmptyIndex : 0);
     focusRingStage();
   }
 
@@ -799,7 +921,7 @@ export default function AlchemyPage() {
 
     const sameMaterialIndex = effectiveSlots.findIndex((slot) => slot.material === formulaAssistAction.key);
     if (sameMaterialIndex >= 0) {
-      setSelectedSlotIndex(sameMaterialIndex);
+      focusWorkbenchSlot(sameMaterialIndex);
       setSlotAmount(sameMaterialIndex, (effectiveSlots[sameMaterialIndex]?.amount ?? 0) + 1);
       publishNearHandResult(`已沿「${formulaTarget?.formula.name}」补入 1 份 ${formulaAssistAction.label}。`, {
         tone: "success",
@@ -817,6 +939,7 @@ export default function AlchemyPage() {
         : effectiveSlots.findIndex((slot) => !slot.material);
     if (emptyIndex >= 0) {
       setSlotMaterial(emptyIndex, formulaAssistAction.key);
+      focusWorkbenchControl();
       publishNearHandResult(`已沿「${formulaTarget?.formula.name}」补入 ${formulaAssistAction.label}。`, {
         tone: "success",
         title: "定式补料",
@@ -834,7 +957,68 @@ export default function AlchemyPage() {
     });
   }
 
-	function renderInventoryPanel(closeAfterInsert = false) {
+  function renderInventoryPanel(closeAfterInsert = false) {
+    const renderInventoryRows = (rows: typeof guidedInventoryRows) => {
+      return rows.map((item) => (
+        <li
+          key={item.key}
+          draggable={item.available > 0}
+          onDragStart={(event) => {
+            event.dataTransfer.setData("text/plain", item.key);
+            setDraggingMaterial(item.key);
+          }}
+          onDragEnd={() => setDraggingMaterial(null)}
+          className={`game-action-card alchemy-inventory-row rounded-lg border p-2 text-xs ${
+            item.isNextAssist
+              ? "alchemy-inventory-row--next"
+              : item.formulaStage === "missing"
+                ? "alchemy-inventory-row--formula"
+                : ""
+          } ${
+            item.available > 0
+              ? "cursor-grab border-[#7d6a45]/55 bg-[#fffdf5] hover:bg-[#f4e7ca]"
+              : "cursor-not-allowed border-[#8f846f]/35 bg-[#f0e9d8] opacity-70"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="font-semibold text-[#3f2f18]">
+                {item.label}（{item.value}）
+              </p>
+              {item.selectedStage === "match" ? (
+                <p className="alchemy-inventory-row__tag">当前槽补量</p>
+              ) : item.selectedStage === "empty_target" ? (
+                <p className="alchemy-inventory-row__tag">当前槽下一味</p>
+              ) : item.isNextAssist ? (
+                <p className="alchemy-inventory-row__tag">下一味</p>
+              ) : item.formulaStage === "missing" ? (
+                <p className="alchemy-inventory-row__tag">定式缺口</p>
+              ) : item.formulaStage === "ready" ? (
+                <p className="alchemy-inventory-row__tag alchemy-inventory-row__tag--muted">定式已就位</p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => handleInventoryInsert(item.key, closeAfterInsert)}
+              disabled={item.available <= 0}
+              className="game-button alchemy-inventory-row__insert rounded border border-[#7d6a45]/45 px-1.5 py-0.5 text-[11px] hover:bg-[#f1e4c5] disabled:opacity-60"
+            >
+              投入阵位
+            </button>
+          </div>
+          <p className="mt-1 text-[11px] text-[#4d3b1f]">
+            库存 {item.stock} · 阵内占用 {item.used} · 可投 {item.available}
+          </p>
+          {item.formulaStage !== "none" ? (
+            <p className="mt-1 text-[11px] text-[#6a5330]">
+              定式进度 {item.formulaRequired - item.formulaRemaining}/{item.formulaRequired}
+              {item.formulaRemaining > 0 ? ` · 还差 ${item.formulaRemaining}` : " · 已满足"}
+            </p>
+          ) : null}
+        </li>
+      ));
+    };
+
     return (
       <>
         <div className="alchemy-inventory-guide">
@@ -855,6 +1039,15 @@ export default function AlchemyPage() {
             </button>
           ) : null}
         </div>
+        {guidedInventoryRows.length > 0 ? (
+          <div className="alchemy-inventory-section-chips">
+            {inventorySections.map((section) => (
+              <span key={section.id} className="alchemy-inventory-section-chips__item">
+                {section.title} {section.rows.length}
+              </span>
+            ))}
+          </div>
+        ) : null}
         <div className="alchemy-inventory-controls grid gap-2 sm:grid-cols-[1fr_auto]">
           <input
             type="text"
@@ -873,70 +1066,120 @@ export default function AlchemyPage() {
             <option value="name">按名称</option>
           </select>
         </div>
-        <ul className="mt-2 space-y-2">
-          {guidedInventoryRows.map((item) => (
-            <li
-              key={item.key}
-              draggable={item.available > 0}
-              onDragStart={(event) => {
-                event.dataTransfer.setData("text/plain", item.key);
-                setDraggingMaterial(item.key);
-              }}
-              onDragEnd={() => setDraggingMaterial(null)}
-              className={`game-action-card alchemy-inventory-row rounded-lg border p-2 text-xs ${
-                item.isNextAssist
-                  ? "alchemy-inventory-row--next"
-                  : item.formulaStage === "missing"
-                    ? "alchemy-inventory-row--formula"
-                    : ""
-              } ${
-                item.available > 0
-                  ? "cursor-grab border-[#7d6a45]/55 bg-[#fffdf5] hover:bg-[#f4e7ca]"
-                  : "cursor-not-allowed border-[#8f846f]/35 bg-[#f0e9d8] opacity-70"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="font-semibold text-[#3f2f18]">
-                    {item.label}（{item.value}）
-                  </p>
-                  {item.selectedStage === "match" ? (
-                    <p className="alchemy-inventory-row__tag">当前槽补量</p>
-                  ) : item.selectedStage === "empty_target" ? (
-                    <p className="alchemy-inventory-row__tag">当前槽下一味</p>
-                  ) : item.isNextAssist ? (
-                    <p className="alchemy-inventory-row__tag">下一味</p>
-                  ) : item.formulaStage === "missing" ? (
-                    <p className="alchemy-inventory-row__tag">定式缺口</p>
-                  ) : item.formulaStage === "ready" ? (
-                    <p className="alchemy-inventory-row__tag alchemy-inventory-row__tag--muted">定式已就位</p>
+        {guidedInventoryRows.length > 0 ? (
+          <div className="alchemy-inventory-sections">
+            {inventorySections.map((section) => (
+              <details
+                key={section.id}
+                className={`alchemy-inventory-section alchemy-inventory-section--${section.id}`}
+                open={section.id !== "reserve" || Boolean(materialQuery.trim())}
+              >
+                <summary className="alchemy-inventory-section__summary">
+                  <div className="alchemy-inventory-section__head">
+                    <div>
+                      <p className="alchemy-inventory-section__title">{section.title}</p>
+                      <p className="alchemy-inventory-section__copy">{section.copy}</p>
+                    </div>
+                    <div className="alchemy-inventory-section__summary-meta">
+                      <span className="alchemy-inventory-section__count">{section.rows.length}</span>
+                      <span className="alchemy-inventory-section__chevron" aria-hidden>
+                        ▾
+                      </span>
+                    </div>
+                  </div>
+                </summary>
+                <ul className="alchemy-inventory-section__list">{renderInventoryRows(section.rows)}</ul>
+              </details>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-2 rounded-lg border border-dashed border-[#8f846f]/45 bg-[#f0e9d8] px-2 py-3 text-xs text-[#5e4d30]">
+            未找到匹配材料。
+          </div>
+        )}
+      </>
+    );
+  }
+
+  function renderEffectsContent() {
+    return game.activeEffects.length > 0 ? (
+      <ul className="space-y-2 text-sm">
+        {game.activeEffects.map((effect) => (
+          <li key={effect.id} className="rounded border border-[#8b7954]/35 bg-[#fff8e8] p-2">
+            <p className="font-semibold">{effect.label}</p>
+            <p className="mt-1 opacity-85">{effect.description}</p>
+            <p className="text-xs opacity-75">剩余炼成：{effect.remainingTransmutations}</p>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-sm leading-7 opacity-80">
+        当前没有临时效果。你可以先去剧情页触发异象，获得祝福或负面状态。
+      </p>
+    );
+  }
+
+  function renderFormulaContent() {
+    return (
+      <>
+        {nextGuidance ? (
+          <div className="rounded border border-[#8b7954]/35 bg-[#fff8e8] p-2 text-sm">
+            <p className="font-semibold">当前建议：{nextGuidance.formulaName}</p>
+            <ul className="mt-1 list-disc pl-5">
+              {nextGuidance.recommendations.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        <ul className="mt-2 space-y-2 text-sm">
+          {ARCANE_FORMULAS.map((formula) => {
+            const unlocked = rankToIndex(game.rank) >= rankToIndex(formula.minRank);
+            const discovered = discoveredFormulas.has(formula.id);
+            const isActiveTarget = formulaTarget?.formula.id === formula.id && formulaTarget.foreignCount === 0;
+            return (
+              <li
+                key={formula.id}
+                className={`rounded-lg border p-2 ${
+                  isActiveTarget
+                    ? "alchemy-formula-list__item--active"
+                    : unlocked
+                      ? "border-[#7b6944]/50 bg-[#fff8e6]"
+                      : "border-[#8d7f63]/35 bg-[#f4ecda] opacity-70"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold">{discovered ? formula.name : "未解析定式"}</p>
+                  {isActiveTarget ? (
+                    <span className="alchemy-formula-list__status">
+                      {formulaProgressRows.filter((item) => item.remaining === 0).length}/{formulaProgressRows.length}
+                    </span>
                   ) : null}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleInventoryInsert(item.key, closeAfterInsert)}
-                  disabled={item.available <= 0}
-                  className="game-button alchemy-inventory-row__insert rounded border border-[#7d6a45]/45 px-1.5 py-0.5 text-[11px] hover:bg-[#f1e4c5] disabled:opacity-60"
-                >
-                  投入阵位
-                </button>
-              </div>
-              <p className="mt-1 text-[11px] text-[#4d3b1f]">
-                库存 {item.stock} · 阵内占用 {item.used} · 可投 {item.available}
-              </p>
-              {item.formulaStage !== "none" ? (
-                <p className="mt-1 text-[11px] text-[#6a5330]">
-                  定式进度 {item.formulaRequired - item.formulaRemaining}/{item.formulaRequired}
-                  {item.formulaRemaining > 0 ? ` · 还差 ${item.formulaRemaining}` : " · 已满足"}
+                <p className="mt-1 text-xs">
+                  需求境界：{formula.minRank}
+                  {isActiveTarget ? "（当前逼近）" : unlocked ? "（可触发）" : "（尚未达到）"}
                 </p>
-              ) : null}
-            </li>
-          ))}
-          {guidedInventoryRows.length === 0 ? (
-            <li className="rounded-lg border border-dashed border-[#8f846f]/45 bg-[#f0e9d8] px-2 py-3 text-xs text-[#5e4d30]">
-              未找到匹配材料。
-            </li>
-          ) : null}
+                {discovered ? (
+                  <>
+                    <p className="mt-1 text-xs leading-6">
+                      材料：
+                      {Object.entries(formula.ingredients)
+                        .map(([key, value]) => `${RESOURCE_LABELS[key as ResourceKey]}x${value}`)
+                        .join(" + ")}
+                    </p>
+                    <p className="text-xs leading-6">
+                      结果：{RESOURCE_LABELS[formula.output.resource]} x {formula.output.amount}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-1 text-xs leading-6 opacity-75">
+                    尚未破译。尝试靠近正确组合，捕捉阵纹共振以解锁细节。
+                  </p>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </>
     );
@@ -949,8 +1192,11 @@ export default function AlchemyPage() {
     publishNearHandResult(result.message, {
       tone: result.success ? "success" : "error",
       title: result.success ? "炼成完成" : "阵式紊乱",
-      detail: result.message,
+      detail: result.success
+        ? `交换成立 · 投入 ${result.consumedValue} · 产出 ${result.producedValue}`
+        : compactReportText(result.message),
       meta: result.success ? (producedSummary ? `显化：${producedSummary}` : "本次未生成额外资源摘要。") : "检查材料组合或临时效果后再尝试。",
+      fullDetail: result.message,
     });
     setRitualFeedback({
       id: Date.now(),
@@ -979,7 +1225,7 @@ export default function AlchemyPage() {
 	        </div>
 	      </section>
 
-      <div className="workshop-page__grid xl:grid-cols-[minmax(0,1fr)_23rem]">
+      <div className="workshop-page__grid">
         <section className="alchemy-workbench__main space-y-3 sm:space-y-4 reveal-up">
 	          <article className="ritual-card rounded-2xl p-4 sm:p-5 alchemy-status-card">
 	            <div className="alchemy-status-head">
@@ -1089,13 +1335,13 @@ export default function AlchemyPage() {
                           setSlotMaterial(index, dropped);
                         }
                         setDraggingMaterial(null);
-                        setSelectedSlotIndex(index);
+                        focusWorkbenchSlot(index);
                       }}
-                      onClick={() => setSelectedSlotIndex(index)}
+                      onClick={() => focusWorkbenchSlot(index)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
                           event.preventDefault();
-                          setSelectedSlotIndex(index);
+                          focusWorkbenchSlot(index);
                         }
                       }}
                       className={`absolute ${SLOT_POSITIONS[index]} w-[4.35rem] rounded-md border px-1 py-1 text-[9px] leading-tight shadow-sm transition sm:w-[6.2rem] sm:rounded-lg sm:px-2 sm:text-xs lg:w-[7rem] ${
@@ -1152,27 +1398,56 @@ export default function AlchemyPage() {
               </div>
 
               <div className="alchemy-ring-stage__console grid content-start gap-3 lg:sticky lg:top-[7.25rem]">
-                <div className="ritual-stat-grid sm:grid-cols-2 xl:grid-cols-1">
-                  <div className="ritual-stat">
-                    <p className="ritual-stat__label">投入价值</p>
-                    <p className="ritual-stat__value">{offeredValue}</p>
+                <div className="alchemy-console-status">
+                  <div className="alchemy-console-status__chips">
+                    <span className="alchemy-console-status__chip">投入值 {offeredValue}</span>
+                    <span className="alchemy-console-status__chip">行动 {game.actionsLeft}/3</span>
+                    <span className="alchemy-console-status__chip">定式 {game.discoveredFormulas.length}</span>
                   </div>
-                  <div className="ritual-stat">
-                    <p className="ritual-stat__label">行动余量</p>
-                    <p className="ritual-stat__value">{game.actionsLeft}/3</p>
-                  </div>
-                  <div className="ritual-stat">
-                    <p className="ritual-stat__label">已解定式</p>
-                    <p className="ritual-stat__value">{game.discoveredFormulas.length}</p>
-                  </div>
+                  <p className="alchemy-console-status__copy">
+                    {hasCurse
+                      ? "阵式受紊乱残渣影响，更容易出现低阶杂质。"
+                      : hasBlessing
+                        ? "阵式正处于祝福窗口，更容易显化稳定或高阶产物。"
+                        : "当前阵式稳定，按标准等价交换执行。"}
+                  </p>
                 </div>
-                <div className="ritual-list__item text-sm leading-7 text-[#4d381c]">
-                  {hasCurse
-                    ? "阵式受紊乱残渣影响，更容易出现低阶杂质。"
-                    : hasBlessing
-                      ? "阵式正处于祝福窗口，更容易显化稳定或高阶产物。"
-                      : "当前阵式稳定，按标准等价交换执行。"}
+                <div className="alchemy-console-tabs hidden xl:flex" role="tablist" aria-label="炼金控制台">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={desktopWorkbenchTab === "control"}
+                    onClick={() => setDesktopWorkbenchTab("control")}
+                    className={`alchemy-console-tabs__button ${
+                      desktopWorkbenchTab === "control" ? "alchemy-console-tabs__button--active" : ""
+                    }`}
+                  >
+                    近手调槽
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={desktopWorkbenchTab === "inventory"}
+                    onClick={() => setDesktopWorkbenchTab("inventory")}
+                    className={`alchemy-console-tabs__button ${
+                      desktopWorkbenchTab === "inventory" ? "alchemy-console-tabs__button--active" : ""
+                    }`}
+                  >
+                    背包投料
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={desktopWorkbenchTab === "reference"}
+                    onClick={() => setDesktopWorkbenchTab("reference")}
+                    className={`alchemy-console-tabs__button ${
+                      desktopWorkbenchTab === "reference" ? "alchemy-console-tabs__button--active" : ""
+                    }`}
+                  >
+                    定式与效果
+                  </button>
                 </div>
+                {!isDesktopWorkbench || desktopWorkbenchTab === "control" ? (
 	                <div className="alchemy-slot-editor">
 	                  <div className="alchemy-slot-editor__header">
 	                    <div>
@@ -1187,18 +1462,34 @@ export default function AlchemyPage() {
 	                      选中空槽
 	                    </button>
 	                  </div>
-                      <div className="alchemy-slot-editor__status">
-                        <p className="alchemy-slot-editor__status-label">当前手边</p>
-                        <p className="alchemy-slot-editor__status-copy">{slotFocusSummary}</p>
-                        <div className={`alchemy-slot-editor__report alchemy-slot-editor__report--${nearHandReport.tone}`}>
-                          <div className="alchemy-slot-editor__report-head">
-                            <span className="alchemy-slot-editor__report-pill">{nearHandReport.title}</span>
+                      <div className={`alchemy-slot-editor__status ${isWorkbenchIdle ? "alchemy-slot-editor__status--idle" : ""}`}>
+                        <p className="alchemy-slot-editor__status-label">{isWorkbenchIdle ? "快速开始" : "当前手边"}</p>
+                        <p className="alchemy-slot-editor__status-copy">
+                          {isWorkbenchIdle ? "先点阵盘中的槽位，或切到“背包投料”补入第一味材料。" : slotFocusSummary}
+                        </p>
+                        {isWorkbenchIdle ? null : (
+                          <div className={`alchemy-slot-editor__report alchemy-slot-editor__report--${nearHandReport.tone}`}>
+                            <div className="alchemy-slot-editor__report-head">
+                              <span className="alchemy-slot-editor__report-pill">{nearHandReport.title}</span>
+                              {canExpandReport ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setReportExpanded((value) => !value)}
+                                  className="alchemy-slot-editor__report-toggle"
+                                >
+                                  {reportExpanded ? "收起" : "详情"}
+                                </button>
+                              ) : null}
+                            </div>
+                            <p className="alchemy-slot-editor__report-detail">{nearHandReport.detail}</p>
+                            {nearHandReport.meta ? (
+                              <p className="alchemy-slot-editor__report-meta">{nearHandReport.meta}</p>
+                            ) : null}
+                            {canExpandReport && reportExpanded ? (
+                              <p className="alchemy-slot-editor__report-extended">{nearHandReport.fullDetail}</p>
+                            ) : null}
                           </div>
-                          <p className="alchemy-slot-editor__report-detail">{nearHandReport.detail}</p>
-                          {nearHandReport.meta ? (
-                            <p className="alchemy-slot-editor__report-meta">{nearHandReport.meta}</p>
-                          ) : null}
-                        </div>
+                        )}
                       </div>
 	                  {selectedSlotIndex !== null ? (
 	                    <>
@@ -1326,9 +1617,27 @@ export default function AlchemyPage() {
                       </div>
                     </>
                   ) : (
-                    <p className="alchemy-slot-editor__empty-note">
-                      先点阵盘中的槽位，再在这里调整数量或定向投料。
-                    </p>
+                    <div className="alchemy-slot-editor__empty-state">
+                      <p className="alchemy-slot-editor__empty-note">
+                        先点阵盘中的槽位；如果只是起手试配，也可以直接切到“背包投料”或点上方快捷投料。
+                      </p>
+                      <div className="alchemy-slot-editor__quick-actions">
+                        <button
+                          type="button"
+                          onClick={focusSelectedOrNextEmptySlot}
+                          className="alchemy-slot-editor__secondary"
+                        >
+                          选中空槽
+                        </button>
+                        <button
+                          type="button"
+                          onClick={openInventoryIntake}
+                          className="alchemy-slot-editor__secondary"
+                        >
+                          {isDesktopWorkbench ? "去背包投料" : "打开材料匣"}
+                        </button>
+                      </div>
+                    </div>
                   )}
                   <div className="alchemy-slot-editor__desktop-actions hidden lg:grid">
                     <button
@@ -1349,6 +1658,32 @@ export default function AlchemyPage() {
                     </button>
                   </div>
                 </div>
+                ) : null}
+                {isDesktopWorkbench && desktopWorkbenchTab === "inventory" ? (
+                  <div className="alchemy-console-panel">
+                  {renderInventoryPanel()}
+                  </div>
+                ) : null}
+                {isDesktopWorkbench && desktopWorkbenchTab === "reference" ? (
+                  <div className="alchemy-console-panel alchemy-console-panel--reference">
+                  <section className="alchemy-console-reference">
+                    <div className="alchemy-console-reference__section">
+                      <div className="alchemy-console-reference__head">
+                        <p className="alchemy-console-reference__eyebrow">Temporal Effects</p>
+                        <h4 className="alchemy-console-reference__title">炼金临时效果</h4>
+                      </div>
+                      {renderEffectsContent()}
+                    </div>
+                    <div className="alchemy-console-reference__section">
+                      <div className="alchemy-console-reference__head">
+                        <p className="alchemy-console-reference__eyebrow">Arcane Formulae</p>
+                        <h4 className="alchemy-console-reference__title">定式图谱</h4>
+                      </div>
+                      {renderFormulaContent()}
+                    </div>
+                  </section>
+                  </div>
+                ) : null}
               </div>
               <p className="mt-3 block text-xs leading-6 text-[#6a5330] sm:hidden">
                 小屏设备上优先使用“材料匣”或上方快捷投料，会比拖拽更稳定。
@@ -1358,7 +1693,7 @@ export default function AlchemyPage() {
 
         </section>
 
-        <aside className="workshop-page__sidebar reveal-up reveal-delay-2 lg:sticky lg:top-[7.1rem] lg:max-h-[calc(100dvh-8rem)]">
+        <aside className="workshop-page__sidebar reveal-up reveal-delay-2 lg:sticky lg:top-[7.1rem] lg:max-h-[calc(100dvh-8rem)] xl:hidden">
           <details className="alchemy-fold hidden lg:block" open>
             <summary className="alchemy-fold__summary">背包与投料</summary>
             <div className="alchemy-fold__content">{renderInventoryPanel()}</div>
@@ -1366,88 +1701,12 @@ export default function AlchemyPage() {
 
           <details className="alchemy-fold">
             <summary className="alchemy-fold__summary">炼金临时效果</summary>
-            <div className="alchemy-fold__content">
-              {game.activeEffects.length > 0 ? (
-                <ul className="space-y-2 text-sm">
-                  {game.activeEffects.map((effect) => (
-                    <li key={effect.id} className="rounded border border-[#8b7954]/35 bg-[#fff8e8] p-2">
-                      <p className="font-semibold">{effect.label}</p>
-                      <p className="mt-1 opacity-85">{effect.description}</p>
-                      <p className="text-xs opacity-75">剩余炼成：{effect.remainingTransmutations}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm leading-7 opacity-80">
-                  当前没有临时效果。你可以先去剧情页触发异象，获得祝福或负面状态。
-                </p>
-              )}
-            </div>
+            <div className="alchemy-fold__content">{renderEffectsContent()}</div>
           </details>
 
           <details className="alchemy-fold">
             <summary className="alchemy-fold__summary">定式图谱（必出）</summary>
-            <div className="alchemy-fold__content">
-              {nextGuidance ? (
-                <div className="rounded border border-[#8b7954]/35 bg-[#fff8e8] p-2 text-sm">
-                  <p className="font-semibold">当前建议：{nextGuidance.formulaName}</p>
-                  <ul className="mt-1 list-disc pl-5">
-                    {nextGuidance.recommendations.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              <ul className="mt-2 space-y-2 text-sm">
-                {ARCANE_FORMULAS.map((formula) => {
-                  const unlocked = rankToIndex(game.rank) >= rankToIndex(formula.minRank);
-                  const discovered = discoveredFormulas.has(formula.id);
-                  const isActiveTarget = formulaTarget?.formula.id === formula.id && formulaTarget.foreignCount === 0;
-                  return (
-                    <li
-                      key={formula.id}
-                      className={`rounded-lg border p-2 ${
-                        isActiveTarget
-                          ? "alchemy-formula-list__item--active"
-                          : unlocked
-                          ? "border-[#7b6944]/50 bg-[#fff8e6]"
-                          : "border-[#8d7f63]/35 bg-[#f4ecda] opacity-70"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-semibold">{discovered ? formula.name : "未解析定式"}</p>
-                        {isActiveTarget ? (
-                          <span className="alchemy-formula-list__status">
-                            {formulaProgressRows.filter((item) => item.remaining === 0).length}/{formulaProgressRows.length}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 text-xs">
-                        需求境界：{formula.minRank}
-                        {isActiveTarget ? "（当前逼近）" : unlocked ? "（可触发）" : "（尚未达到）"}
-                      </p>
-                      {discovered ? (
-                        <>
-                          <p className="mt-1 text-xs leading-6">
-                            材料：
-                            {Object.entries(formula.ingredients)
-                              .map(([key, value]) => `${RESOURCE_LABELS[key as ResourceKey]}x${value}`)
-                              .join(" + ")}
-                          </p>
-                          <p className="text-xs leading-6">
-                            结果：{RESOURCE_LABELS[formula.output.resource]} x {formula.output.amount}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="mt-1 text-xs leading-6 opacity-75">
-                          尚未破译。尝试靠近正确组合，捕捉阵纹共振以解锁细节。
-                        </p>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+            <div className="alchemy-fold__content">{renderFormulaContent()}</div>
           </details>
         </aside>
       </div>
