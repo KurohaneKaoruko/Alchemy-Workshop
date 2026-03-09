@@ -54,7 +54,7 @@ export function EndingRitualOverlay({ ending, onClose }: EndingRitualOverlayProp
         <div className="cinematic-frame__seal" aria-hidden />
         <div className="cinematic-frame__ornament cinematic-frame__ornament--left" aria-hidden />
         <div className="cinematic-frame__ornament cinematic-frame__ornament--right" aria-hidden />
-        <p className="ending-ritual-overlay__label">Grand Work</p>
+        <p className="ending-ritual-overlay__label">大工终局</p>
         <h2 className="ending-ritual-overlay__title">贤者之石完成</h2>
         <div className="ending-ritual-overlay__lines">
           {lines.slice(0, stage).map((line) => (

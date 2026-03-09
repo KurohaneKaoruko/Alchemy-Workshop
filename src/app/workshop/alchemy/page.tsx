@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ARCANE_FORMULAS,
@@ -7,7 +8,10 @@ import {
 } from "@/features/game/logic/alchemyCircle";
 import { EndingRitualOverlay } from "@/features/game/components/EndingRitualOverlay";
 import { EventCinematicOverlay } from "@/features/game/components/EventCinematicOverlay";
+import { FirstDayGuideHint } from "@/features/game/components/FirstDayGuideHint";
 import { RankAscensionOverlay } from "@/features/game/components/RankAscensionOverlay";
+import { buildFirstDayGuide } from "@/features/game/logic/firstDayGuide";
+import { buildGrandWorkPlan } from "@/features/game/logic/grandWorkPlan";
 import { rankToIndex } from "@/features/game/logic/progression";
 import { useWorkshopGame } from "@/features/game/logic/useWorkshopGame";
 import {
@@ -54,6 +58,12 @@ interface NearHandReport {
 
 type RingBurstState = "none" | "success" | "fail";
 type DesktopWorkbenchTab = "control" | "inventory" | "reference";
+
+const ROUTE_LABELS = {
+  "/workshop/story": "前往剧情探索",
+  "/workshop/alchemy": "前往魔法阵炼金",
+  "/workshop/journal": "前往炼金档案",
+} as const;
 
 function getEffectTotals(
   effects: Array<{
@@ -193,6 +203,8 @@ export default function AlchemyPage() {
   const [desktopWorkbenchTab, setDesktopWorkbenchTab] = useState<DesktopWorkbenchTab>("control");
   const [isDesktopWorkbench, setIsDesktopWorkbench] = useState(false);
   const ringStageRef = useRef<HTMLDivElement | null>(null);
+  const firstDayGuide = buildFirstDayGuide(game);
+  const plan = buildGrandWorkPlan(game);
 
   const effectiveSlots = useMemo(() => normalizeSlots(slots, game.resources), [slots, game.resources]);
   const offered = useMemo(() => slotsToOffer(effectiveSlots), [effectiveSlots]);
@@ -666,6 +678,34 @@ export default function AlchemyPage() {
     }
     return formulaTargetHint ?? "可刻印";
   }, [busy, canTransmute, filledSlotCount, formulaTargetHint, game.actionsLeft, nearHandReport, selectedSlot, selectedSlotIndex]);
+  const ritualToneLabel = hasCurse ? "紊乱" : hasBlessing ? "受祝" : "平衡";
+  const alchemySignals = [
+    {
+      label: "行动",
+      value: `${game.actionsLeft}/3`,
+      note: `当前境界：${game.rank}`,
+    },
+    {
+      label: "阵位",
+      value: `${filledSlotCount}/9`,
+      note: selectedSlotIndex !== null ? `聚焦第 ${selectedSlotIndex + 1} 槽` : "未固定聚焦槽位",
+    },
+    {
+      label: "投料",
+      value: `${offeredValue}`,
+      note: `${selectedMaterials.length} 种 · ${totalOfferedAmount} 份`,
+    },
+    {
+      label: "阵况",
+      value: ritualToneLabel,
+      note: `临时效果 ${game.activeEffects.length} · 定式 ${game.discoveredFormulas.length}`,
+    },
+  ] as const;
+  const alchemyFocusTitle = plan.actionCue.href === "/workshop/alchemy" ? formulaTargetLabel : plan.actionCue.title;
+  const alchemyFocusCopy =
+    plan.actionCue.href === "/workshop/alchemy"
+      ? `${slotTargetHint} · ${actionBarMessage}`
+      : `当前大工更建议先${ROUTE_LABELS[plan.actionCue.href]}，炼金页可以作为下一步执行工序。`;
 
   useEffect(() => {
     if (!ritualFeedback) {
@@ -1211,26 +1251,56 @@ export default function AlchemyPage() {
 
   return (
     <div className="workshop-page alchemy-workbench pb-28 sm:pb-32 lg:pb-0">
-      <section className="workshop-hero-card workshop-hero-card--compact alchemy-workbench__hero reveal-up">
-        <p className="workshop-hero-card__eyebrow">Circle Hall</p>
-        <h2 className="workshop-hero-card__title">魔法阵炼金</h2>
-	        <p className="workshop-hero-card__lead">
-	          把材料投入阵位即可显化产物；命中定式时，阵纹会稳定地回应你。
-	        </p>
-	        <div className="alchemy-hero-strip">
-	          <span className="alchemy-hero-token">行动 {game.actionsLeft}/3 · {game.rank}</span>
-	          <span className="alchemy-hero-token">
-              {hasCurse ? "紊乱" : hasBlessing ? "受祝" : "平衡"} · 效果 {game.activeEffects.length} · 定式 {game.discoveredFormulas.length}
-            </span>
-	        </div>
-	      </section>
+      <section className="workshop-hero-card workshop-hero-card--compact alchemy-workbench__hero alchemy-page__hero reveal-up">
+        <div className="alchemy-page__hero-layout">
+          <div className="alchemy-page__hero-copy">
+            <p className="workshop-hero-card__eyebrow">魔法阵炼金</p>
+            <h2 className="workshop-hero-card__title">魔法阵炼金</h2>
+            <p className="workshop-hero-card__lead">
+              把材料投入阵位即可显化产物；命中定式时，阵纹会稳定回应。页面现在优先展示当前刻印焦点，而不是重复堆叠阵况摘要。
+            </p>
+
+            <div className="alchemy-page__focus-card">
+              <span className="alchemy-page__focus-label">当前刻印焦点</span>
+              <strong className="alchemy-page__focus-title">{alchemyFocusTitle}</strong>
+              <p className="alchemy-page__focus-copy">{alchemyFocusCopy}</p>
+              <div className="alchemy-page__focus-actions">
+                {plan.actionCue.href !== "/workshop/alchemy" ? (
+                  <Link
+                    href={plan.actionCue.href}
+                    className="game-button inline-flex min-h-10 items-center justify-center rounded-lg border border-[#6b5b37] bg-[#ead8aa] px-3 py-2 text-sm hover:bg-[#dfc993]"
+                  >
+                    {ROUTE_LABELS[plan.actionCue.href]}
+                  </Link>
+                ) : null}
+                <span className="alchemy-page__focus-chip">状态：{statusBadgeText}</span>
+                <span className="alchemy-page__focus-chip">阵况：{ritualToneLabel}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="alchemy-page__hero-rail">
+            <div className="alchemy-page__hero-stats">
+              {alchemySignals.map((item) => (
+                <div key={item.label} className="alchemy-page__hero-stat">
+                  <span className="alchemy-page__hero-stat-label">{item.label}</span>
+                  <strong className="alchemy-page__hero-stat-value">{item.value}</strong>
+                  <span className="alchemy-page__hero-stat-note">{item.note}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <FirstDayGuideHint guide={firstDayGuide} currentStepId="alchemy" />
 
       <div className="workshop-page__grid">
         <section className="alchemy-workbench__main space-y-3 sm:space-y-4 reveal-up">
 	          <article className="ritual-card rounded-2xl p-4 sm:p-5 alchemy-status-card">
 	            <div className="alchemy-status-head">
 	              <div className="alchemy-status-head__copy">
-	                <p className="ritual-card__eyebrow">Ritual Status</p>
+	                <p className="ritual-card__eyebrow">阵式状态</p>
 	                <h3 className="ritual-card__title">当前阵式</h3>
 	                <p className="alchemy-status-head__summary" title={`目标定式：${formulaTargetLabel} · ${slotTargetHint}`}>
                       <span className="alchemy-status-signature">{formulaTargetLabel}</span>
@@ -1286,7 +1356,7 @@ export default function AlchemyPage() {
 	                      className="alchemy-quick-picks__drawer-trigger lg:hidden"
 	                    >
                         <span className="sm:hidden">材料匣</span>
-                        <span className="hidden sm:inline">打开材料匣</span>
+                        <span className="hidden sm:inline">查看材料匣</span>
 	                    </button>
 	                  </div>
 	                  <div className="alchemy-quick-picks__list">
@@ -1451,7 +1521,7 @@ export default function AlchemyPage() {
 	                <div className="alchemy-slot-editor">
 	                  <div className="alchemy-slot-editor__header">
 	                    <div>
-	                      <p className="alchemy-slot-editor__eyebrow">Slot Focus</p>
+	                      <p className="alchemy-slot-editor__eyebrow">近手调槽</p>
                       <h4 className="alchemy-slot-editor__title">近手调槽</h4>
                     </div>
                     <button
@@ -1579,7 +1649,7 @@ export default function AlchemyPage() {
                               onClick={() => setMobileInventoryOpen(true)}
                               className="alchemy-slot-editor__secondary lg:hidden"
                             >
-                              打开材料匣
+                              查看材料匣
                             </button>
                           </div>
                         </>
@@ -1634,7 +1704,7 @@ export default function AlchemyPage() {
                           onClick={openInventoryIntake}
                           className="alchemy-slot-editor__secondary"
                         >
-                          {isDesktopWorkbench ? "去背包投料" : "打开材料匣"}
+                          {isDesktopWorkbench ? "前往背包投料" : "查看材料匣"}
                         </button>
                       </div>
                     </div>
@@ -1669,14 +1739,14 @@ export default function AlchemyPage() {
                   <section className="alchemy-console-reference">
                     <div className="alchemy-console-reference__section">
                       <div className="alchemy-console-reference__head">
-                        <p className="alchemy-console-reference__eyebrow">Temporal Effects</p>
+	                        <p className="alchemy-console-reference__eyebrow">临时效果</p>
                         <h4 className="alchemy-console-reference__title">炼金临时效果</h4>
                       </div>
                       {renderEffectsContent()}
                     </div>
                     <div className="alchemy-console-reference__section">
                       <div className="alchemy-console-reference__head">
-                        <p className="alchemy-console-reference__eyebrow">Arcane Formulae</p>
+	                        <p className="alchemy-console-reference__eyebrow">定式图谱</p>
                         <h4 className="alchemy-console-reference__title">定式图谱</h4>
                       </div>
                       {renderFormulaContent()}
@@ -1712,7 +1782,7 @@ export default function AlchemyPage() {
       </div>
 
       <div className="alchemy-action-bar">
-        <div className="alchemy-action-bar__panel">
+        <div className="alchemy-action-bar__panel alchemy-action-bar__panel--compact">
           <div className="alchemy-action-bar__summary">
             <p className="alchemy-action-bar__label">当前刻印</p>
             <div className="alchemy-action-bar__stats">
@@ -1765,7 +1835,7 @@ export default function AlchemyPage() {
           <div className="alchemy-mobile-drawer__panel">
             <div className="alchemy-mobile-drawer__header">
               <div>
-                <p className="alchemy-mobile-drawer__eyebrow">Inventory Drawer</p>
+	                <p className="alchemy-mobile-drawer__eyebrow">材料抽屉</p>
                 <h3 className="alchemy-mobile-drawer__title">材料匣</h3>
                 <p className="alchemy-mobile-drawer__lead">{mobileDrawerLead}</p>
               </div>

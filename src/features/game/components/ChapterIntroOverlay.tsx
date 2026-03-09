@@ -39,7 +39,7 @@ export function ChapterIntroOverlay({ intro, onClose }: ChapterIntroOverlayProps
         <div className="cinematic-frame__seal" aria-hidden />
         <div className="cinematic-frame__ornament cinematic-frame__ornament--left" aria-hidden />
         <div className="cinematic-frame__ornament cinematic-frame__ornament--right" aria-hidden />
-        <p className="chapter-intro-overlay__label">Chapter Entry</p>
+        <p className="chapter-intro-overlay__label">章节开场</p>
         <h2 className="chapter-intro-overlay__title">{intro.title}</h2>
         <p className="chapter-intro-overlay__rank">{intro.rank}</p>
         <p className="chapter-intro-overlay__summary">{intro.summary}</p>

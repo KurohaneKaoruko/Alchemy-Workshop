@@ -46,7 +46,7 @@ export function WorkshopSectionIndicator() {
         {meta.sigil}
       </div>
       <div className="workshop-section-indicator__copy">
-        <p className="workshop-section-indicator__eyebrow">Current Station</p>
+        <p className="workshop-section-indicator__eyebrow">当前分区</p>
         <p className="workshop-section-indicator__title">{meta.title}</p>
         <p className="workshop-section-indicator__summary">{meta.summary}</p>
       </div>

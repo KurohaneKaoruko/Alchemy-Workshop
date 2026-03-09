@@ -104,7 +104,7 @@ export function GrandWorkAgenda({
     >
       <div className="grand-work-agenda__head flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="ritual-card__eyebrow">Grand Work Agenda</p>
+          <p className="ritual-card__eyebrow">大工导览</p>
           <h3 className="grand-work-agenda__title ritual-card__title">大工导览</h3>
           <p className="grand-work-agenda__summary ritual-card__copy">{plan.phase.summary}</p>
         </div>
@@ -141,7 +141,7 @@ export function GrandWorkAgenda({
           </div>
 
           <article className="grand-work-agenda__mobile-action">
-            <p className="grand-work-agenda__mobile-label">Next Step</p>
+            <p className="grand-work-agenda__mobile-label">下一步</p>
             <h4 className="grand-work-agenda__mobile-action-title">{plan.actionCue.title}</h4>
             <p className="grand-work-agenda__mobile-action-copy">{plan.daySignal}</p>
             <Link
@@ -178,7 +178,7 @@ export function GrandWorkAgenda({
             <div className="grand-work-agenda__mobile-details-body">
               <section className="grand-work-agenda__mobile-details-section">
                 <div className="grand-work-agenda__mobile-details-head">
-                  <p className="grand-work-agenda__mobile-label">Ascension Ladder</p>
+                  <p className="grand-work-agenda__mobile-label">晋升阶梯</p>
                   <span className="grand-work-agenda__mobile-badge">
                     {plan.rankGoal.targetRank ? `${plan.rankGoal.currentRank} -> ${plan.rankGoal.targetRank}` : "已封顶"}
                   </span>
@@ -211,7 +211,7 @@ export function GrandWorkAgenda({
 
               <section className="grand-work-agenda__mobile-details-section">
                 <div className="grand-work-agenda__mobile-details-head">
-                  <p className="grand-work-agenda__mobile-label">Formula Trace</p>
+                  <p className="grand-work-agenda__mobile-label">定式轨迹</p>
                   {plan.formulaGoal ? (
                     <span className={`grand-work-agenda__mobile-badge ${getStatusTone(plan.formulaGoal.status)}`}>
                       {STATUS_LABELS[plan.formulaGoal.status]}
@@ -256,7 +256,7 @@ export function GrandWorkAgenda({
         <details className="grand-work-agenda__desktop-fold hidden sm:block">
           <summary className="grand-work-agenda__desktop-fold-summary">
             <div className="grand-work-agenda__desktop-fold-copy">
-              <p className="grand-work-agenda__desktop-fold-label">Agenda Preview</p>
+              <p className="grand-work-agenda__desktop-fold-label">导览摘要</p>
               <p className="grand-work-agenda__desktop-fold-title">{plan.actionCue.title}</p>
               <p className="grand-work-agenda__desktop-fold-note">{plan.daySignal}</p>
             </div>
@@ -276,14 +276,14 @@ export function GrandWorkAgenda({
           <div className="grand-work-agenda__desktop-fold-body mt-4 grid gap-4 xl:grid-cols-[1.1fr_0.95fr_1fr]">
       <article className="rounded-2xl border border-[#8f7448]/20 bg-[rgba(255,251,241,0.76)] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.28)]">
         <p className="text-[0.68rem] uppercase tracking-[0.22em] text-[#8b6d39]/72">
-          Immediate Route
+          当前工序
         </p>
         <h4 className="mt-2 text-xl text-[#2f220f]">{plan.phase.title}</h4>
         <p className="mt-3 text-sm leading-7 text-[#5c4522]/82">{plan.daySignal}</p>
 
         <div className="mt-4 rounded-2xl border border-[#8f7448]/18 bg-[rgba(246,236,208,0.62)] p-3">
           <p className="text-xs uppercase tracking-[0.18em] text-[#7f6231]/68">
-            Recommended Next Step
+            推荐下一步
           </p>
           <p className="mt-2 text-base font-semibold text-[#352512]">{plan.actionCue.title}</p>
           <p className="mt-1 text-sm leading-7 text-[#604927]/78">{plan.actionCue.description}</p>
@@ -333,7 +333,7 @@ export function GrandWorkAgenda({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[0.68rem] uppercase tracking-[0.22em] text-[#8b6d39]/72">
-              Ascension Ladder
+              晋升阶梯
             </p>
             <h4 className="mt-2 text-xl text-[#2f220f]">
               {plan.rankGoal.targetRank ? `迈向「${plan.rankGoal.targetRank}」` : "境界已封顶"}
@@ -367,7 +367,7 @@ export function GrandWorkAgenda({
 
         {plan.rankGoal.recipeRequirement ? (
           <div className="mt-4 rounded-2xl border border-[#8f7448]/16 bg-[rgba(246,236,208,0.58)] p-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#7f6231]/68">Ritual Gate</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-[#7f6231]/68">晋升门槛</p>
             <p className="mt-2 text-sm font-semibold text-[#352512]">
               {plan.rankGoal.recipeRequirement.label}
             </p>
@@ -384,7 +384,7 @@ export function GrandWorkAgenda({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[0.68rem] uppercase tracking-[0.22em] text-[#8b6d39]/72">
-              Formula Trace
+              定式轨迹
             </p>
             <h4 className="mt-2 text-xl text-[#2f220f]">
               {plan.formulaGoal ? plan.formulaGoal.formulaName : "当前无阻塞定式"}
@@ -458,14 +458,14 @@ export function GrandWorkAgenda({
         <div className={`mt-4 grid gap-4 xl:grid-cols-[1.1fr_0.95fr_1fr] ${useCompactMobile ? "hidden sm:grid" : ""}`}>
         <article className="rounded-2xl border border-[#8f7448]/20 bg-[rgba(255,251,241,0.76)] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.28)]">
           <p className="text-[0.68rem] uppercase tracking-[0.22em] text-[#8b6d39]/72">
-            Immediate Route
+            当前工序
           </p>
           <h4 className="mt-2 text-xl text-[#2f220f]">{plan.phase.title}</h4>
           <p className="mt-3 text-sm leading-7 text-[#5c4522]/82">{plan.daySignal}</p>
 
           <div className="mt-4 rounded-2xl border border-[#8f7448]/18 bg-[rgba(246,236,208,0.62)] p-3">
             <p className="text-xs uppercase tracking-[0.18em] text-[#7f6231]/68">
-              Recommended Next Step
+              推荐下一步
             </p>
             <p className="mt-2 text-base font-semibold text-[#352512]">{plan.actionCue.title}</p>
             <p className="mt-1 text-sm leading-7 text-[#604927]/78">{plan.actionCue.description}</p>
@@ -515,7 +515,7 @@ export function GrandWorkAgenda({
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[0.68rem] uppercase tracking-[0.22em] text-[#8b6d39]/72">
-                Ascension Ladder
+                晋升阶梯
               </p>
               <h4 className="mt-2 text-xl text-[#2f220f]">
                 {plan.rankGoal.targetRank ? `迈向「${plan.rankGoal.targetRank}」` : "境界已封顶"}
@@ -549,7 +549,7 @@ export function GrandWorkAgenda({
 
           {plan.rankGoal.recipeRequirement ? (
             <div className="mt-4 rounded-2xl border border-[#8f7448]/16 bg-[rgba(246,236,208,0.58)] p-3">
-              <p className="text-xs uppercase tracking-[0.18em] text-[#7f6231]/68">Ritual Gate</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-[#7f6231]/68">晋升门槛</p>
               <p className="mt-2 text-sm font-semibold text-[#352512]">
                 {plan.rankGoal.recipeRequirement.label}
               </p>
@@ -566,7 +566,7 @@ export function GrandWorkAgenda({
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[0.68rem] uppercase tracking-[0.22em] text-[#8b6d39]/72">
-                Formula Trace
+                定式轨迹
               </p>
               <h4 className="mt-2 text-xl text-[#2f220f]">
                 {plan.formulaGoal ? plan.formulaGoal.formulaName : "当前无阻塞定式"}

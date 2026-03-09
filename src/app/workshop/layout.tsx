@@ -32,7 +32,7 @@ export default function WorkshopLayout({
               <Link href="/" className="workshop-brand" aria-label="返回首页">
                 <span className="workshop-brand__crest" aria-hidden />
                 <span className="workshop-brand__copy">
-                  <p className="workshop-brand__subtitle">Ritual Text Adventure</p>
+                  <p className="workshop-brand__subtitle">仪式文字冒险</p>
                   <h1 className="workshop-brand__title">炼金工坊</h1>
                 </span>
               </Link>

@@ -138,7 +138,7 @@ export default function SettingsPage() {
   const draftStepLabel = hasUnsavedChanges ? "有改动" : "已同步";
   const draftStepMessage = hasUnsavedChanges
     ? "当前草稿和已保存设置不同，建议先保存再继续测试。"
-    : "当前草稿与已保存设置一致。若要快速回滚，可直接载入已保存状态。";
+    : "当前草稿与已保存设置一致。若要快速回滚，可直接载入存档。";
   const settingsOverview = useMemo(
     () =>
       buildSettingsOverview(checklist, runtimeAiConfig, status, {
@@ -148,6 +148,28 @@ export default function SettingsPage() {
       }),
     [checklist, runtimeAiConfig, status, aiModeLabel, keyStatus, canTestConnection],
   );
+  const controlSignals = [
+    {
+      label: "模式",
+      value: aiModeLabel,
+      note: runtimeAiConfig ? runtimeAiConfig.model : "当前使用本地回退叙事",
+    },
+    {
+      label: "草稿",
+      value: hasUnsavedChanges ? "待保存" : "已同步",
+      note: hasAiChanges || hasAudioChanges ? "检测到未保存改动" : "当前与已保存设置一致",
+    },
+    {
+      label: "清单",
+      value: `${readyChecklistCount}/${checklist.length}`,
+      note: `连接：${settingsOverview.connectionLabel}`,
+    },
+    {
+      label: "音效",
+      value: gameDraft.sfxEnabled ? `${Math.round(gameDraft.sfxVolume * 100)}%` : "关闭",
+      note: hasAudioChanges ? "本地偏好草稿已改动" : "本地偏好已同步",
+    },
+  ] as const;
 
   async function onSave() {
     setBusyAction("save");
@@ -185,167 +207,100 @@ export default function SettingsPage() {
 
   return (
     <div className="workshop-page">
-      <section className="workshop-hero-card workshop-hero-card--compact workshop-hero-card--mobile-tight reveal-up">
-        <div className="settings-hero">
-          <div className="settings-hero__copy">
-            <p className="workshop-hero-card__eyebrow">Control Desk</p>
+      <section className="workshop-hero-card workshop-hero-card--compact workshop-hero-card--mobile-tight settings-page__hero reveal-up">
+        <div className="settings-page__hero-layout">
+          <div className="settings-page__hero-copy">
+            <p className="workshop-hero-card__eyebrow">控制台</p>
             <h2 className="workshop-hero-card__title">工坊设置</h2>
             <p className="workshop-hero-card__lead">
-              这里不只是填写参数，更是校验工坊控制面的地方。你可以在同一屏内确认 AI 异象是否具备生效条件、草稿是否尚未保存，以及音效策略是否符合当前设备环境。
+              设置页现在优先回答三件事：当前配置是否能生效、哪些草稿尚未保存、以及你是否已经具备连接测试条件。
             </p>
-            <div className="workshop-hero-card__meta settings-hero__mobile-meta xl:hidden">
-              <span className="workshop-pill">
-                {runtimeAiConfig ? `AI 已启用：${runtimeAiConfig.model}` : "AI 处于关闭或回退状态"}
-              </span>
-              <span className="workshop-pill">音效：{gameDraft.sfxEnabled ? "开启" : "关闭"}</span>
-              <span className="workshop-pill">草稿：{hasUnsavedChanges ? "有未保存更改" : "已同步"}</span>
+            <div className="workshop-hero-card__meta">
+              <span className="workshop-pill">当前模式：{aiModeLabel}</span>
+              <span className="workshop-pill">草稿：{hasUnsavedChanges ? "待保存" : "已同步"}</span>
+              <span className="workshop-pill">检查清单：{readyChecklistCount}/{checklist.length}</span>
             </div>
-            <div className="ritual-chip-row mt-4 settings-hero__mobile-strip xl:hidden">
-              <span className="ritual-chip">检查清单：{readyChecklistCount}/{checklist.length}</span>
-              <span className="ritual-chip">连接策略：OpenAI 兼容网关</span>
-              <span className="ritual-chip">当前模式：{aiModeLabel}</span>
+
+            <div className="settings-page__focus-card">
+              <span className="settings-page__focus-label">当前控制焦点</span>
+              <strong className="settings-page__focus-title">{settingsOverview.headline}</strong>
+              <p className="settings-page__focus-copy">{settingsOverview.detail}</p>
+              <div className="settings-page__focus-actions">
+                <button
+                  type="button"
+                  onClick={onSave}
+                  disabled={busyAction === "save" || !hasUnsavedChanges}
+                  className="settings-action-button settings-action-button--primary"
+                >
+                  {saveButtonLabel}
+                </button>
+                <button
+                  type="button"
+                  onClick={onTest}
+                  disabled={busyAction === "test" || !canTestConnection}
+                  className="settings-action-button settings-action-button--secondary"
+                >
+                  {testButtonLabel}
+                </button>
+              </div>
+              <p className="settings-page__focus-note">{connectionMessage}</p>
             </div>
           </div>
 
-          <aside className="settings-hero__rail hidden xl:grid">
-            <div className="settings-hero__rail-card">
-              <p className="settings-hero__rail-eyebrow">Control Summary</p>
-              <div className="settings-hero__rail-grid">
-                <div className="settings-hero__rail-stat">
-                  <span className="settings-hero__rail-label">当前模式</span>
-                  <strong className="settings-hero__rail-value">{aiModeLabel}</strong>
+          <div className="settings-page__hero-rail">
+            <div className="settings-page__hero-stats">
+              {controlSignals.map((item) => (
+                <div key={item.label} className="settings-page__hero-stat">
+                  <span className="settings-page__hero-stat-label">{item.label}</span>
+                  <strong className="settings-page__hero-stat-value">{item.value}</strong>
+                  <span className="settings-page__hero-stat-note">{item.note}</span>
                 </div>
-                <div className="settings-hero__rail-stat">
-                  <span className="settings-hero__rail-label">草稿状态</span>
-                  <strong className="settings-hero__rail-value">{hasUnsavedChanges ? "待保存" : "已同步"}</strong>
-                </div>
-                <div className="settings-hero__rail-stat">
-                  <span className="settings-hero__rail-label">检查清单</span>
-                  <strong className="settings-hero__rail-value">
-                    {readyChecklistCount}/{checklist.length}
-                  </strong>
-                </div>
-                <div className="settings-hero__rail-stat">
-                  <span className="settings-hero__rail-label">仪式音效</span>
-                  <strong className="settings-hero__rail-value">
-                    {gameDraft.sfxEnabled ? `${Math.round(gameDraft.sfxVolume * 100)}%` : "关闭"}
-                  </strong>
-                </div>
-              </div>
+              ))}
             </div>
-            <div className="settings-hero__rail-note">
-              <span>连接策略</span>
-              <p>OpenAI 兼容网关，数值结算仍由本地规则引擎处理。</p>
-            </div>
-          </aside>
+          </div>
         </div>
       </section>
 
       <div className="workshop-page__grid settings-page__grid xl:grid-cols-[minmax(0,1.16fr)_21rem]">
         <section className="space-y-4 reveal-up">
           <article className="ritual-card ritual-card--mobile-tight rounded-2xl p-5">
-            <div className="settings-snapshot-head ritual-mobile-stack-head flex flex-wrap items-start justify-between gap-3">
-              <div className="settings-snapshot-head__copy min-w-0 flex-1">
-                <p className="ritual-card__eyebrow">Control Snapshot</p>
-                <h3 className="ritual-card__title">控制台快照</h3>
-                <p className="settings-snapshot-head__note">
-                  保存前先看草稿差异；需要回滚走左侧信号轨，需要验证连接走右侧操作坞。
-                </p>
+            <div className="settings-page__section-head">
+              <div className="min-w-0 flex-1">
+                <p className="ritual-card__eyebrow">控制操作</p>
+                <h3 className="ritual-card__title">设置操作台</h3>
+                <p className="ritual-card__copy">把最常用的保存、测试、回滚操作集中到这里，避免在页首重复展示完整流程说明。</p>
               </div>
-              <div className="settings-snapshot-head__chips ritual-chip-row">
-                <span className="ritual-chip settings-snapshot-head__chip">AI 草稿：{hasAiChanges ? "已改动" : "未改动"}</span>
-                <span className="ritual-chip settings-snapshot-head__chip">音效草稿：{hasAudioChanges ? "已改动" : "未改动"}</span>
+              <div className="ritual-chip-row">
+                <span className="ritual-chip">AI 草稿：{hasAiChanges ? "已改动" : "未改动"}</span>
+                <span className="ritual-chip">音效草稿：{hasAudioChanges ? "已改动" : "未改动"}</span>
               </div>
             </div>
 
-            <div className="settings-control-grid mt-4">
-              <div className="settings-sequence-card">
-                <p className="settings-sequence-card__eyebrow">Setup Sequence</p>
-                <div className="settings-sequence-card__list">
-                  <div className="settings-sequence-card__item">
-                    <span className="settings-sequence-card__index">01</span>
-                    <div className="settings-sequence-card__body">
-                      <div className="settings-sequence-card__head">
-                        <p className="settings-sequence-card__title">确认当前生效条件</p>
-                        <span className="settings-sequence-card__badge">{readinessStepLabel}</span>
-                      </div>
-                      <p className="settings-sequence-card__copy">{readinessStepMessage}</p>
-                    </div>
-                  </div>
-
-                  <div className="settings-sequence-card__item">
-                    <span className="settings-sequence-card__index">02</span>
-                    <div className="settings-sequence-card__body">
-                      <div className="settings-sequence-card__head">
-                        <p className="settings-sequence-card__title">处理草稿</p>
-                        <span className="settings-sequence-card__badge">{draftStepLabel}</span>
-                      </div>
-                      <p className="settings-sequence-card__copy">{draftStepMessage}</p>
-                      <div className="settings-sequence-card__actions">
-                        <button
-                          type="button"
-                          onClick={restoreSavedDraft}
-                          className="game-button rounded border border-[#6b5b37] bg-[#efe3c4] px-3 py-2 text-sm hover:bg-[#e6d3a7]"
-                        >
-                          载入已保存
-                        </button>
-                        <button
-                          type="button"
-                          onClick={restoreDefaultDraft}
-                          className="game-button rounded border border-[#7a5442] bg-[#f0d6c8] px-3 py-2 text-sm hover:bg-[#e7c2ad]"
-                        >
-                          恢复默认
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <div className="settings-page__operation-grid mt-4">
+              <div className="settings-page__operation-card">
+                <span className="settings-page__operation-label">确认当前生效条件</span>
+                <strong className="settings-page__operation-value">{readinessStepLabel}</strong>
+                <p className="settings-page__operation-copy">{readinessStepMessage}</p>
               </div>
 
-              <div className="settings-action-dock">
-                <div className="settings-action-dock__header">
-                  <div>
-                    <p className="settings-action-dock__eyebrow">Save & Verify</p>
-                    <h4 className="settings-action-dock__title">保存与验证</h4>
-                  </div>
-                  <span className="settings-action-dock__badge">
-                    {hasUnsavedChanges ? "待保存" : "已同步"}
-                  </span>
-                </div>
-
-                <div className="settings-action-dock__summary">
-                  <div className="settings-action-dock__summary-item">
-                    <span className="settings-action-dock__summary-label">保存状态</span>
-                    <strong className="settings-action-dock__summary-value">
-                      {hasUnsavedChanges ? "草稿已变更" : "当前已同步"}
-                    </strong>
-                    <p className="settings-action-dock__summary-copy">{saveStateSummary}</p>
-                  </div>
-                  <div className="settings-action-dock__summary-item">
-                    <span className="settings-action-dock__summary-label">连接条件</span>
-                    <strong className="settings-action-dock__summary-value">
-                      {canTestConnection ? "可直接测试" : "待补全"}
-                    </strong>
-                    <p className="settings-action-dock__summary-copy">{testStateSummary}</p>
-                  </div>
-                </div>
-
-                <div className="settings-action-dock__buttons">
+              <div className="settings-page__operation-card">
+                <span className="settings-page__operation-label">处理草稿</span>
+                <strong className="settings-page__operation-value">{draftStepLabel}</strong>
+                <p className="settings-page__operation-copy">{draftStepMessage}</p>
+                <div className="settings-page__operation-actions">
                   <button
                     type="button"
-                    onClick={onSave}
-                    disabled={busyAction === "save" || !hasUnsavedChanges}
-                    className="settings-action-button settings-action-button--primary"
+                    onClick={restoreSavedDraft}
+                    className="game-button rounded border border-[#6b5b37] bg-[#efe3c4] px-3 py-2 text-sm hover:bg-[#e6d3a7]"
                   >
-                    {saveButtonLabel}
+                    载入存档
                   </button>
                   <button
                     type="button"
-                    onClick={onTest}
-                    disabled={busyAction === "test" || !canTestConnection}
-                    className="settings-action-button settings-action-button--secondary"
+                    onClick={restoreDefaultDraft}
+                    className="game-button rounded border border-[#7a5442] bg-[#f0d6c8] px-3 py-2 text-sm hover:bg-[#e7c2ad]"
                   >
-                    {testButtonLabel}
+                    恢复默认
                   </button>
                 </div>
               </div>
@@ -353,7 +308,7 @@ export default function SettingsPage() {
           </article>
 
           <article className="ritual-card rounded-2xl p-5">
-            <p className="ritual-card__eyebrow">AI Omen Source</p>
+            <p className="ritual-card__eyebrow">AI 异象来源</p>
             <h3 className="ritual-card__title">AI 随机事件设置</h3>
             <div className="ritual-form-grid mt-4">
               <label className="ritual-field ritual-field--featured">
@@ -442,7 +397,7 @@ export default function SettingsPage() {
           </article>
 
           <article className="ritual-card rounded-2xl p-5">
-            <p className="ritual-card__eyebrow">Ritual Audio</p>
+            <p className="ritual-card__eyebrow">仪式音效</p>
             <h3 className="ritual-card__title">仪式音效</h3>
             <div className="ritual-form-grid mt-4 text-sm text-[#3f2f18]">
               <label className="ritual-field ritual-field--featured">
@@ -508,23 +463,16 @@ export default function SettingsPage() {
 
         <aside className="workshop-page__sidebar settings-sidebar reveal-up reveal-delay-2">
           <section className="ritual-card settings-sidebar__card settings-sidebar__card--overview rounded-2xl p-4">
-            <p className="ritual-card__eyebrow">Calibration Overview</p>
-            <h3 className="ritual-card__title">校准概览</h3>
-            <div className={`settings-overview-panel mt-4 ${getOverviewToneClasses(settingsOverview.tone)}`}>
-              <div className="settings-overview-panel__head">
-                <div>
-                  <p className="settings-overview-panel__headline">{settingsOverview.headline}</p>
-                  <p className="settings-overview-panel__detail">{settingsOverview.detail}</p>
-                </div>
-                <span className="settings-overview-panel__count">
+            <p className="ritual-card__eyebrow">校验清单</p>
+            <h3 className="ritual-card__title">检查清单</h3>
+            <div className={`settings-page__sidebar-summary mt-4 ${getOverviewToneClasses(settingsOverview.tone)}`}>
+              <div className="settings-page__sidebar-summary-head">
+                <p className="settings-page__sidebar-summary-title">{settingsOverview.headline}</p>
+                <span className="settings-page__sidebar-summary-count">
                   就绪 {settingsOverview.readinessCount}/{settingsOverview.totalCount}
                 </span>
               </div>
-              <div className="settings-overview-panel__chips">
-                <span className="settings-overview-panel__chip">叙事：{settingsOverview.modeLabel}</span>
-                <span className="settings-overview-panel__chip">密钥：{settingsOverview.keyLabel}</span>
-                <span className="settings-overview-panel__chip">连接：{settingsOverview.connectionLabel}</span>
-              </div>
+              <p className="settings-page__sidebar-summary-detail">{settingsOverview.detail}</p>
             </div>
             <div className="ritual-list mt-4">
               {checklist.map((item) => (
@@ -549,7 +497,7 @@ export default function SettingsPage() {
           </section>
 
           <section className="ritual-card settings-sidebar__card settings-sidebar__card--security rounded-2xl p-4">
-            <p className="ritual-card__eyebrow">Security Note</p>
+            <p className="ritual-card__eyebrow">安全说明</p>
             <h3 className="ritual-card__title">安全说明</h3>
             <div className="ritual-list mt-4">
               <div className="ritual-list__item">

@@ -84,7 +84,7 @@ export function WorkshopNav({ items }: WorkshopNavProps) {
               <aside className="workshop-nav-drawer workshop-mobile-panel">
                 <div className="workshop-nav-drawer__header">
                   <div className="workshop-nav-drawer__title-group">
-                    <p className="workshop-nav-drawer__eyebrow">Workshop Routes</p>
+                    <p className="workshop-nav-drawer__eyebrow">工坊路线</p>
                     <h2 className="workshop-nav-drawer__title">工坊分区</h2>
                   </div>
                   <button
