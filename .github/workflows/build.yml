@@ -1,0 +1,46 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Godot 4.6.1 and export templates
+        run: |
+          curl -L --fail -o godot.zip https://github.com/godotengine/godot-builds/releases/download/4.6.1-stable/Godot_v4.6.1-stable_linux.x86_64.zip
+          curl -L --fail -o templates.tpz https://github.com/godotengine/godot-builds/releases/download/4.6.1-stable/Godot_v4.6.1-stable_export_templates.tpz
+          unzip -q godot.zip
+          unzip -q templates.tpz -d tpz_tmp
+          mkdir -p ~/.local/share/godot/export_templates
+          mv tpz_tmp/templates ~/.local/share/godot/export_templates/4.6.1.stable
+          chmod +x Godot_v4.6.1-stable_linux.x86_64
+
+      - name: Export release build
+        run: |
+          mkdir -p build
+          ./Godot_v4.6.1-stable_linux.x86_64 --headless --import > /dev/null 2>&1 || true
+          ./Godot_v4.6.1-stable_linux.x86_64 --headless --export-release "Windows Desktop" build/AlchemyWorkshop_v0.1.0_win64.exe
+          ls -la build/
+
+      - name: Checksum
+        run: |
+          cd build
+          sha256sum AlchemyWorkshop_v0.1.0_win64.exe | tee AlchemyWorkshop_v0.1.0_win64.exe.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlchemyWorkshop_v0.1.0_win64
+          path: |
+            build/AlchemyWorkshop_v0.1.0_win64.exe
+            build/AlchemyWorkshop_v0.1.0_win64.exe.sha256
+          if-no-files-found: error
