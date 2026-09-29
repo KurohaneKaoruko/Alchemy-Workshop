@@ -50,7 +50,17 @@ pwsh -File tools/build.ps1
 - `tools/godot/`：`Godot_v4.7.2-stable_win64.exe` 与 console 版
 - `.godot-user/Godot/export_templates/4.7.2.stable/`：官方导出模板中的 `windows_release_x86_64.exe` 与 `version.txt`
 
-GitHub Actions（`build.yml`）会在 push 到 main 时构建并上传 Artifacts，供后续发布使用。
+GitHub Actions（`build.yml`）**只在发布时构建**，日常 push 到 main 不会触发：
+
+```bash
+# 发布：打标签推送即可，版本号取自标签
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+也可在仓库 Actions 页面手动触发（Run workflow），此时版本号取自 `project.godot`。
+标签与 `project.godot` 的 `config/version` 不一致时构建会给出告警，产物按标签版本命名。
+产物以 Artifacts 上传，命名与本地脚本一致（`AlchemyWorkshop_v<版本>.exe` + `.sha256`）。
+
 ## 测试
 
 ```bash

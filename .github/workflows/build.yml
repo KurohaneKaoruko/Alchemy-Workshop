@@ -1,11 +1,20 @@
-name: Build Windows
+name: Build Windows Release
 
+# 只在「要发布」时才构建，日常 push 到 main 不触发：
+#   1) 推 v* 标签  ->  例如 git tag v1.2.3 && git push origin v1.2.3
+#   2) Actions 页面手动触发（Run workflow）
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -13,6 +22,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        run: |
+          set -euo pipefail
+          PROJECT_VER="$(sed -n 's/^config\/version="\([^"]*\)"$/\1/p' project.godot | head -n1)"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            REF_VER="${GITHUB_REF_NAME#v}"
+            if [ "${REF_VER}" != "${PROJECT_VER}" ]; then
+              echo "::warning title=版本不一致::标签 ${GITHUB_REF_NAME} 与 project.godot 的 ${PROJECT_VER} 不一致，产物按标签版本命名。"
+            fi
+            VER="${REF_VER}"
+          else
+            VER="${PROJECT_VER}"
+          fi
+          if [ -z "${VER}" ]; then
+            echo "::error::无法确定版本号（project.godot 缺少 config/version）"
+            exit 1
+          fi
+          echo "version=${VER}" >> "$GITHUB_OUTPUT"
+          echo "构建版本：v${VER}"
 
       - name: Setup Godot 4.7.2 and export templates
         run: |
@@ -27,20 +57,22 @@ jobs:
       - name: Export release build
         run: |
           mkdir -p builds
+          APP="AlchemyWorkshop_v${{ steps.version.outputs.version }}.exe"
           ./Godot_v4.7.2-stable_linux.x86_64 --headless --import > /dev/null 2>&1 || true
-          ./Godot_v4.7.2-stable_linux.x86_64 --headless --export-release "Windows Desktop" builds/AlchemyWorkshop_v0.1.0.exe
+          ./Godot_v4.7.2-stable_linux.x86_64 --headless --export-release "Windows Desktop" "builds/${APP}"
           ls -la builds/
 
       - name: Checksum
         run: |
           cd builds
-          sha256sum AlchemyWorkshop_v0.1.0.exe | tee AlchemyWorkshop_v0.1.0.exe.sha256
+          APP="AlchemyWorkshop_v${{ steps.version.outputs.version }}.exe"
+          sha256sum "${APP}" | tee "${APP}.sha256"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AlchemyWorkshop_v0.1.0_win64
+          name: AlchemyWorkshop_v${{ steps.version.outputs.version }}_win64
           path: |
-            builds/AlchemyWorkshop_v0.1.0.exe
-            builds/AlchemyWorkshop_v0.1.0.exe.sha256
+            builds/AlchemyWorkshop_v${{ steps.version.outputs.version }}.exe
+            builds/AlchemyWorkshop_v${{ steps.version.outputs.version }}.exe.sha256
           if-no-files-found: error
