@@ -29,7 +29,7 @@
 
 ## 运行
 
-1. 安装 [Godot 4.6](https://godotengine.org/download)（标准版即可）。
+1. 安装 [Godot 4.7](https://godotengine.org/download)（标准版即可）。
 2. 用 Godot 打开本目录的 `project.godot`。
 3. 按 F5 运行。基础窗口 1440×900，最小 1152×720。
 
@@ -37,10 +37,20 @@
 
 ## 构建
 
-- 推送到 main 自动触发 GitHub Actions 构建 Windows 版，产物见
-  [Actions](https://github.com/KurohaneKaoruko/Alchemy-Workshop/actions) 页面的 Artifacts。
-- 手动出包：Godot 编辑器 → 项目 → 导出 → Windows Desktop（需要 Godot 4.6.1 导出模板）。
+本地构建（推荐）：
 
+```powershell
+pwsh -File tools/build.ps1
+```
+
+脚本使用项目内的 Godot 引擎（`tools/godot/`）与 Windows 导出模板
+（`.godot-user/Godot/export_templates/`），通过 `APPDATA` 指向 `.godot-user` 便携运行，
+产物输出到 `builds/`。这两个目录均不入库，需要时从 Godot 4.7.2 官方发行版取：
+
+- `tools/godot/`：`Godot_v4.7.2-stable_win64.exe` 与 console 版
+- `.godot-user/Godot/export_templates/4.7.2.stable/`：官方导出模板中的 `windows_release_x86_64.exe` 与 `version.txt`
+
+GitHub Actions（`build.yml`）会在 push 到 main 时构建并上传 Artifacts，供后续发布使用。
 ## 测试
 
 ```bash
