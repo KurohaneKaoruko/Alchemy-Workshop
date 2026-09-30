@@ -40,4 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# godot 误生成的导入缓存
+*.svg.import
+
 output/
