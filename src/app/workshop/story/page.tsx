@@ -200,7 +200,7 @@ export default function StoryPage() {
         </div>
       </section>
 
-      <FirstDayGuideHint guide={firstDayGuide} currentStepId="story" />
+      <FirstDayGuideHint guide={firstDayGuide} currentStepId="story" variant="compact" />
 
       <div className="workshop-page__grid lg:grid-cols-[minmax(0,1.2fr)_22rem]">
         <section className="space-y-4 reveal-up">
@@ -257,9 +257,15 @@ export default function StoryPage() {
         </section>
 
         <aside className="workshop-page__sidebar reveal-up reveal-delay-2">
-          <section className="ritual-card rounded-2xl p-4">
-            <p className="ritual-card__eyebrow">剧情快照</p>
-            <h3 className="ritual-card__title">剧情快照</h3>
+          <section className="ritual-card rounded-2xl p-4 story-page__sidebar-card">
+            <div className="story-page__section-head">
+              <div className="min-w-0 flex-1">
+                <p className="ritual-card__eyebrow">剧情辅助</p>
+                <h3 className="ritual-card__title">快照与线索</h3>
+                <p className="ritual-card__copy">把属性、线索与章节注记收在一块，减少右侧纵向堆叠。</p>
+              </div>
+            </div>
+
             <div className="story-page__snapshot-grid mt-4">
               {storySnapshot.map((item) => (
                 <div key={item.label} className="story-page__snapshot-item">
@@ -269,27 +275,22 @@ export default function StoryPage() {
                 </div>
               ))}
             </div>
-          </section>
 
-          <section className="ritual-card rounded-2xl p-4">
-            <p className="ritual-card__eyebrow">线索追踪</p>
-            <h3 className="ritual-card__title">定式线索</h3>
             {nextGuidance ? (
               <div className="story-page__guidance-card mt-4">
                 <div className="story-page__guidance-head">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#3f2d16]">
-                      下一目标：{nextGuidance.formulaName}
-                    </p>
+                    <p className="text-sm font-semibold text-[#3f2d16]">下一目标：{nextGuidance.formulaName}</p>
                     <p className="mt-1 text-sm text-[#6c542c]/80">目标产物：{nextGuidance.outputLabel}</p>
                   </div>
-                  <span className="story-page__guidance-badge">
-                    {GUIDANCE_STATUS_LABELS[nextGuidance.status]}
-                  </span>
+                  <span className="story-page__guidance-badge">{GUIDANCE_STATUS_LABELS[nextGuidance.status]}</span>
                 </div>
 
                 <div className="ritual-list mt-3">
-                  {nextGuidance.recommendations.slice(0, 2).map((item) => (
+                  {(clueEntries.length > 0
+                    ? clueEntries.map((entry) => entry.title.replace("定式线索：", ""))
+                    : nextGuidance.recommendations.slice(0, 2)
+                  ).map((item) => (
                     <div key={item} className="ritual-list__item">
                       <p className="text-sm leading-7 text-[#5a4220]/85">{item}</p>
                     </div>
@@ -297,30 +298,13 @@ export default function StoryPage() {
                 </div>
               </div>
             ) : (
-              <p className="ritual-note">所有定式均已解析，接下来只需专注于终局炼成。</p>
-            )}
-
-            {clueEntries.length > 0 ? (
-              <div className="ritual-list mt-3">
-                {clueEntries.map((entry) => (
-                  <div key={entry.id} className="ritual-list__item">
-                    <p className="text-sm text-[#4f3b1d]">{entry.title.replace("定式线索：", "")}</p>
-                  </div>
-                ))}
+              <div className="story-page__guidance-card mt-4">
+                <p className="text-sm leading-7 text-[#5a4220]/85">所有定式均已解析，接下来只需专注于终局炼成。</p>
               </div>
-            ) : (
-              <p className="mt-3 text-sm leading-7 text-[#5b4726]/78">
-                暂无新线索。可优先尝试“解读翠玉录”或“午夜冥想”。
-              </p>
             )}
-          </section>
 
-          <section className="ritual-card--dark rounded-2xl p-4">
-            <p className="ritual-card__eyebrow">章节氛围</p>
-            <h3 className="ritual-card__title">章节注记</h3>
-            <p className="ritual-card__copy">{chapter.atmosphere}</p>
-            <p className="story-page__tablet-quote">
-              “其下如其上，其上如其下，以成就一物之奇迹。”每一次探索都在校正你对这句箴言的理解。
+            <p className="story-page__tablet-quote story-page__tablet-quote--inline">
+              {chapter.atmosphere}
             </p>
           </section>
         </aside>

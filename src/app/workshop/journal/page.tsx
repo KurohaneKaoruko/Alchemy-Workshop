@@ -183,6 +183,7 @@ export default function JournalPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [journalFilter, setJournalFilter] = useState<JournalType | "all">("all");
   const [archiveFilter, setArchiveFilter] = useState<CinematicArchiveEntry["kind"] | "all">("all");
+  const [archiveView, setArchiveView] = useState<"journal" | "replay">("journal");
   const [eventReplay, setEventReplay] = useState<LastEventDigest | null>(null);
   const [chapterReplay, setChapterReplay] = useState<ChapterIntroPayload | null>(null);
   const [rankReplay, setRankReplay] = useState<RankAscensionPayload | null>(null);
@@ -210,7 +211,6 @@ export default function JournalPage() {
   const spotlightEntry = filteredEntries[0] ?? null;
   const activeReplayCount = filteredEntries.length;
   const totalReplayCount = entries.length;
-  const totalArchiveMoments = Object.values(summary.archiveCounts).reduce((sum, value) => sum + value, 0);
   const activeResourceKinds = Object.values(game.resources).filter((amount) => amount > 0).length;
   const archiveSignals = [
     {
@@ -358,7 +358,7 @@ export default function JournalPage() {
         </div>
       </section>
 
-      <FirstDayGuideHint guide={firstDayGuide} currentStepId="journal" />
+      <FirstDayGuideHint guide={firstDayGuide} currentStepId="journal" variant="compact" />
 
       <div className="workshop-page__grid xl:grid-cols-[minmax(0,1.18fr)_21rem]">
         <section className="space-y-4">
@@ -438,85 +438,85 @@ export default function JournalPage() {
           <article className="ritual-card reveal-up reveal-delay-2 rounded-2xl p-5">
             <div className="journal-page__section-head">
               <div className="min-w-0 flex-1">
-                <p className="ritual-card__eyebrow">工坊日志</p>
-                <h2 className="ritual-card__title">工坊日志</h2>
-                <p className="ritual-card__copy">最近的剧情推进、随机事件和炼金记录都会写入这里，并按你当前的筛选条件即时收拢。</p>
+                <p className="ritual-card__eyebrow">档案记录</p>
+                <h2 className="ritual-card__title">日志与过场</h2>
+                <p className="ritual-card__copy">主区改成一个记录面板，按需切看日志或过场，减少首屏纵向堆叠。</p>
               </div>
-              <span className="rounded-full border border-[#8f7448]/20 bg-[#f8efdc] px-2.5 py-1 text-xs text-[#664c27]">
-                {journalFilter === "all" ? "全部类型" : JOURNAL_TYPE_LABELS[journalFilter]}
-              </span>
-            </div>
-
-            <div className="ritual-log-list mt-4 max-h-none overflow-visible pr-0 lg:max-h-[32rem] lg:overflow-auto lg:pr-1">
-              {filteredJournal.map((entry) => (
-                <div key={entry.id} className="ritual-log-item">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="ritual-chip px-2.5 py-1 text-[11px]">{JOURNAL_TYPE_LABELS[entry.type]}</span>
-                    <p className="text-sm font-semibold text-[#3d2b14]">
-                      第 {entry.day} 日 · {entry.title}
-                    </p>
-                  </div>
-                  <p className="mt-2 whitespace-pre-line text-sm leading-7 text-[#5a4220]/85">{entry.body}</p>
-                </div>
-              ))}
-              {filteredJournal.length === 0 ? (
-                <div className="ritual-log-item">
-                  <p className="text-sm leading-7 text-[#5a4220]/78">当前筛选下暂无日志。换个类型，或清空搜索词后再看。</p>
-                </div>
-              ) : null}
-            </div>
-          </article>
-
-          <article className="ritual-card reveal-up reveal-delay-3 rounded-2xl p-5">
-            <div className="journal-page__section-head">
-              <div className="min-w-0 flex-1">
-                <p className="ritual-card__eyebrow">过场记录</p>
-                <h2 className="ritual-card__title">过场记录列表</h2>
-                <p className="ritual-card__copy">这里保留所有可重播过场。清单会随着上方筛选与搜索联动，不再只是按时间平铺到底。</p>
+              <div className="journal-page__view-switch">
+                <button
+                  type="button"
+                  onClick={() => setArchiveView("journal")}
+                  className={`game-button rounded-full border px-3 py-1.5 text-xs ${getFilterButtonClass(archiveView === "journal")}`}
+                >
+                  日志 {filteredJournal.length}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setArchiveView("replay")}
+                  className={`game-button rounded-full border px-3 py-1.5 text-xs ${getFilterButtonClass(archiveView === "replay")}`}
+                >
+                  过场 {filteredEntries.length}
+                </button>
               </div>
-              <span className="rounded-full border border-[#8f7448]/20 bg-[#f8efdc] px-2.5 py-1 text-xs text-[#664c27]">
-                总计 {totalArchiveMoments} 条
-              </span>
             </div>
 
-            <div className="ritual-log-list mt-4 max-h-none overflow-visible pr-0 lg:max-h-[26rem] lg:overflow-auto lg:pr-1">
-              {filteredEntries.map((entry) => (
-                <div key={entry.id} className="ritual-log-item">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="ritual-chip px-2.5 py-1 text-[11px]">{KIND_LABELS[entry.kind]}</span>
-                    <p className="text-sm font-semibold text-[#3d2b14]">{entry.title}</p>
+            {archiveView === "journal" ? (
+              <div className="ritual-log-list mt-4 max-h-none overflow-visible pr-0 lg:max-h-[34rem] lg:overflow-auto lg:pr-1">
+                {filteredJournal.map((entry) => (
+                  <div key={entry.id} className="ritual-log-item">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="ritual-chip px-2.5 py-1 text-[11px]">{JOURNAL_TYPE_LABELS[entry.type]}</span>
+                      <p className="text-sm font-semibold text-[#3d2b14]">
+                        第 {entry.day} 日 · {entry.title}
+                      </p>
+                    </div>
+                    <p className="mt-2 whitespace-pre-line text-sm leading-7 text-[#5a4220]/85">{entry.body}</p>
                   </div>
-                  {entry.subtitle ? <p className="mt-1 text-sm text-[#5a4220]/80">{entry.subtitle}</p> : null}
-                  <p className="mt-2 text-sm leading-7 text-[#5a4220]/78">{entry.body}</p>
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-xs text-[#756241]/72">
-                      第 {entry.day} 日 · {formatDate(entry.createdAt)}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => onReplay(entry)}
-                      className="game-button rounded border border-[#6b5b37] bg-[#efe3c4] px-2.5 py-1 text-xs hover:bg-[#e6d3a7]"
-                    >
-                      重播
-                    </button>
+                ))}
+                {filteredJournal.length === 0 ? (
+                  <div className="ritual-log-item">
+                    <p className="text-sm leading-7 text-[#5a4220]/78">当前筛选下暂无日志。换个类型，或清空搜索词后再看。</p>
                   </div>
-                </div>
-              ))}
-              {filteredEntries.length === 0 ? (
-                <div className="ritual-log-item">
-                  <p className="text-sm leading-7 text-[#5a4220]/78">
-                    当前筛选下暂无过场。可先刷新档案，或继续推进剧情与炼成。
-                  </p>
-                </div>
-              ) : null}
-            </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="ritual-log-list mt-4 max-h-none overflow-visible pr-0 lg:max-h-[34rem] lg:overflow-auto lg:pr-1">
+                {filteredEntries.map((entry) => (
+                  <div key={entry.id} className="ritual-log-item">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="ritual-chip px-2.5 py-1 text-[11px]">{KIND_LABELS[entry.kind]}</span>
+                      <p className="text-sm font-semibold text-[#3d2b14]">{entry.title}</p>
+                    </div>
+                    {entry.subtitle ? <p className="mt-1 text-sm text-[#5a4220]/80">{entry.subtitle}</p> : null}
+                    <p className="mt-2 text-sm leading-7 text-[#5a4220]/78">{entry.body}</p>
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-xs text-[#756241]/72">
+                        第 {entry.day} 日 · {formatDate(entry.createdAt)}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => onReplay(entry)}
+                        className="game-button rounded border border-[#6b5b37] bg-[#efe3c4] px-2.5 py-1 text-xs hover:bg-[#e6d3a7]"
+                      >
+                        重播
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {filteredEntries.length === 0 ? (
+                  <div className="ritual-log-item">
+                    <p className="text-sm leading-7 text-[#5a4220]/78">当前筛选下暂无过场。可先刷新档案，或继续推进剧情与炼成。</p>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </article>
         </section>
 
         <aside className="workshop-page__sidebar reveal-up reveal-delay-2">
-          <article className="ritual-card rounded-2xl p-4">
-            <p className="ritual-card__eyebrow">档案快照</p>
-            <h3 className="ritual-card__title">档案快照</h3>
+          <article className="ritual-card rounded-2xl p-4 journal-page__support-card">
+            <p className="ritual-card__eyebrow">档案辅助</p>
+            <h3 className="ritual-card__title">快照与维护</h3>
             <div className="journal-page__snapshot-grid mt-4">
               <div className="journal-page__snapshot-item">
                 <span className="journal-page__snapshot-label">最近日志</span>
@@ -525,6 +525,22 @@ export default function JournalPage() {
               <div className="journal-page__snapshot-item">
                 <span className="journal-page__snapshot-label">最近回放</span>
                 <strong className="journal-page__snapshot-value">{summary.latestArchiveEntry?.title ?? "暂无"}</strong>
+              </div>
+              <div className="journal-page__snapshot-item journal-page__snapshot-item--compact">
+                <span className="journal-page__snapshot-label">章节</span>
+                <strong className="journal-page__snapshot-value">{summary.archiveCounts.chapter_intro}</strong>
+              </div>
+              <div className="journal-page__snapshot-item journal-page__snapshot-item--compact">
+                <span className="journal-page__snapshot-label">事件</span>
+                <strong className="journal-page__snapshot-value">{summary.archiveCounts.event}</strong>
+              </div>
+              <div className="journal-page__snapshot-item journal-page__snapshot-item--compact">
+                <span className="journal-page__snapshot-label">晋升</span>
+                <strong className="journal-page__snapshot-value">{summary.archiveCounts.rank_ascension}</strong>
+              </div>
+              <div className="journal-page__snapshot-item journal-page__snapshot-item--compact">
+                <span className="journal-page__snapshot-label">终局</span>
+                <strong className="journal-page__snapshot-value">{summary.archiveCounts.ending}</strong>
               </div>
             </div>
 
@@ -544,29 +560,7 @@ export default function JournalPage() {
                 </div>
               ) : null}
             </div>
-          </article>
 
-          <article className="ritual-card rounded-2xl p-4">
-            <p className="ritual-card__eyebrow">档案维护</p>
-            <h3 className="ritual-card__title">档案维护</h3>
-            <div className="journal-page__snapshot-grid mt-4">
-              <div className="journal-page__snapshot-item journal-page__snapshot-item--compact">
-                <span className="journal-page__snapshot-label">章节</span>
-                <strong className="journal-page__snapshot-value">{summary.archiveCounts.chapter_intro}</strong>
-              </div>
-              <div className="journal-page__snapshot-item journal-page__snapshot-item--compact">
-                <span className="journal-page__snapshot-label">事件</span>
-                <strong className="journal-page__snapshot-value">{summary.archiveCounts.event}</strong>
-              </div>
-              <div className="journal-page__snapshot-item journal-page__snapshot-item--compact">
-                <span className="journal-page__snapshot-label">晋升</span>
-                <strong className="journal-page__snapshot-value">{summary.archiveCounts.rank_ascension}</strong>
-              </div>
-              <div className="journal-page__snapshot-item journal-page__snapshot-item--compact">
-                <span className="journal-page__snapshot-label">终局</span>
-                <strong className="journal-page__snapshot-value">{summary.archiveCounts.ending}</strong>
-              </div>
-            </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"

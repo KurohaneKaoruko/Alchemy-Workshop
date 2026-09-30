@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FirstDayGuideHint } from "@/features/game/components/FirstDayGuideHint";
 import { RESOURCE_LABELS } from "@/features/game/data/resourceMeta";
 import { buildFirstDayGuide } from "@/features/game/logic/firstDayGuide";
 import { buildGrandWorkPlan } from "@/features/game/logic/grandWorkPlan";
@@ -175,147 +176,100 @@ export default function WorkshopPage() {
         </div>
       </section>
 
-      <section className="ritual-card reveal-up reveal-delay-1 rounded-2xl p-5">
-        <div className="workshop-overview__section-head">
-          <div className="min-w-0 flex-1">
-            <p className="ritual-card__eyebrow">大工焦点</p>
-            <h3 className="ritual-card__title">大工焦点</h3>
-            <p className="ritual-card__copy">{plan.phase.summary}</p>
-          </div>
-          <div className="ritual-chip-row">
-            <span className="ritual-chip">
-              晋升准备：{readyRankSteps}/{plan.rankGoal.requirements.length}
-            </span>
-            <span className="ritual-chip">
-              {plan.formulaGoal
-                ? `定式状态：${FORMULA_STATUS_LABELS[plan.formulaGoal.status]}`
-                : "定式状态：当前无阻塞"}
-            </span>
-          </div>
-        </div>
-
-        <div className="workshop-overview__focus-grid mt-4">
-          <div className="workshop-overview__focus-item">
-            <span className="workshop-overview__focus-item-label">推荐工作台</span>
-            <strong className="workshop-overview__focus-item-value">
-              {recommendedStation?.title ?? plan.actionCue.label}
-            </strong>
-            <p className="workshop-overview__focus-item-copy">{plan.actionCue.description}</p>
-          </div>
-          <div className="workshop-overview__focus-item">
-            <span className="workshop-overview__focus-item-label">下一次晋升</span>
-            <strong className="workshop-overview__focus-item-value">
-              {plan.rankGoal.targetRank ? `${plan.rankGoal.currentRank} → ${plan.rankGoal.targetRank}` : "当前已封顶"}
-            </strong>
-            <p className="workshop-overview__focus-item-copy">
-              {plan.rankGoal.targetRank ? `已有 ${readyRankSteps} 项条件就位。` : "现在更适合炼成与归档复盘。"}
-            </p>
-          </div>
-          <div className="workshop-overview__focus-item workshop-overview__focus-item--wide">
-            <span className="workshop-overview__focus-item-label">定式追踪</span>
-            <strong className="workshop-overview__focus-item-value">
-              {plan.formulaGoal ? plan.formulaGoal.formulaName : "当前没有新的定式阻塞"}
-            </strong>
-            <p className="workshop-overview__focus-item-copy">
-              {plan.formulaGoal
-                ? formulaIngredientsTotal > 0
-                  ? `材料已就位 ${formulaIngredientsReady}/${formulaIngredientsTotal} 项，目标产物：${plan.formulaGoal.outputLabel}。`
-                  : `当前状态：${FORMULA_STATUS_LABELS[plan.formulaGoal.status]}。`
-                : "可以按自己的节奏推进探索、炼成或档案整理。"}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {firstDayGuide ? (
+      <div className="workshop-page__grid workshop-overview__dashboard xl:grid-cols-[minmax(0,1.18fr)_20rem]">
         <section className="ritual-card reveal-up reveal-delay-1 rounded-2xl p-5">
           <div className="workshop-overview__section-head">
             <div className="min-w-0 flex-1">
-              <p className="ritual-card__eyebrow">首日引导</p>
-              <h3 className="ritual-card__title">{firstDayGuide.headline}</h3>
-              <p className="ritual-card__copy">{firstDayGuide.summary}</p>
+              <p className="ritual-card__eyebrow">工作台入口</p>
+              <h3 className="ritual-card__title">今日工作台</h3>
+              <p className="ritual-card__copy">这里只保留最该去的入口与最少的当前背景信息。</p>
             </div>
-            <Link
-              href={firstDayGuide.currentHref}
-              className="game-button inline-flex min-h-10 items-center justify-center rounded-xl border border-[#6b5b37] bg-[#ead8aa] px-4 py-2 text-sm font-semibold text-[#3f2d16] hover:bg-[#dfc993]"
-            >
-              {firstDayGuide.currentActionLabel}
-            </Link>
+            <div className="ritual-chip-row">
+              <span className="ritual-chip">晋升准备：{readyRankSteps}/{plan.rankGoal.requirements.length}</span>
+              <span className="ritual-chip">
+                {plan.formulaGoal
+                  ? `定式状态：${FORMULA_STATUS_LABELS[plan.formulaGoal.status]}`
+                  : "定式状态：当前无阻塞"}
+              </span>
+            </div>
           </div>
 
-          <div className="workshop-overview__focus-grid mt-4">
-            {firstDayGuide.milestone ? (
-              <article className="workshop-overview__focus-item workshop-overview__focus-item--wide">
-                <span className="workshop-overview__focus-item-label">阶段完成反馈</span>
-                <strong className="workshop-overview__focus-item-value">{firstDayGuide.milestone.title}</strong>
-                <p className="workshop-overview__focus-item-copy">{firstDayGuide.milestone.summary}</p>
-              </article>
-            ) : null}
-            {firstDayGuide.steps.map((step) => (
-              <article key={step.id} className="workshop-overview__focus-item">
-                <span className="workshop-overview__focus-item-label">{step.status === "done" ? "已完成" : step.status === "active" ? "当前步骤" : "待执行"}</span>
-                <strong className="workshop-overview__focus-item-value">{step.title}</strong>
-                <p className="workshop-overview__focus-item-copy">{step.description}</p>
-              </article>
-            ))}
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {STATIONS.map((station) => {
+              const isRecommended = station.href === recommendedStationHref;
+
+              return (
+                <Link
+                  key={station.href}
+                  href={station.href}
+                  className={`ritual-link-card ritual-link-card--${station.tone} workshop-overview__station ${
+                    isRecommended ? "workshop-overview__station--recommended" : ""
+                  }`}
+                >
+                  <span className="ritual-link-card__seal" aria-hidden>
+                    {station.sigil}
+                  </span>
+                  <p className="ritual-link-card__eyebrow">{station.eyebrow}</p>
+                  <h3 className="ritual-link-card__title">{station.title}</h3>
+                  <p className="ritual-link-card__copy">{station.description}</p>
+                  <div className="workshop-overview__station-tags">
+                    {isRecommended ? <span className="workshop-overview__badge">推荐</span> : null}
+                    <span className="workshop-overview__station-hint">
+                      {isRecommended ? plan.actionCue.title : station.footer}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
-      ) : null}
 
-      <section className="ritual-card reveal-up reveal-delay-2 rounded-2xl p-5">
-        <div className="workshop-overview__section-head">
-          <div className="min-w-0 flex-1">
-            <p className="ritual-card__eyebrow">工作台入口</p>
-            <h3 className="ritual-card__title">选择工作台</h3>
-            <p className="ritual-card__copy">概览页只保留入口，不再在这里重复每个子页面已经会展示的细节。</p>
-          </div>
-        </div>
+        <aside className="workshop-page__sidebar reveal-up reveal-delay-2">
+          <FirstDayGuideHint guide={firstDayGuide} variant="compact" />
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {STATIONS.map((station) => {
-            const isRecommended = station.href === recommendedStationHref;
-
-            return (
-              <Link
-                key={station.href}
-                href={station.href}
-                className={`ritual-link-card ritual-link-card--${station.tone} workshop-overview__station ${
-                  isRecommended ? "workshop-overview__station--recommended" : ""
-                }`}
-              >
-                <span className="ritual-link-card__seal" aria-hidden>
-                  {station.sigil}
-                </span>
-                <p className="ritual-link-card__eyebrow">{station.eyebrow}</p>
-                <h3 className="ritual-link-card__title">{station.title}</h3>
-                <p className="ritual-link-card__copy">{station.description}</p>
-                <div className="workshop-overview__station-tags">
-                  {isRecommended ? <span className="workshop-overview__badge">推荐</span> : null}
-                  <span className="workshop-overview__station-hint">
-                    {isRecommended ? plan.actionCue.title : station.footer}
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      <div className="workshop-page__grid xl:grid-cols-[minmax(0,1.08fr)_22rem]">
-        <section className="space-y-4">
-          <article className="ritual-card reveal-up reveal-delay-2 rounded-2xl p-5">
-            <div className="workshop-overview__section-head">
-              <div className="min-w-0 flex-1">
-                <p className="ritual-card__eyebrow">工坊记录</p>
-                <h3 className="ritual-card__title">最近记录</h3>
-                <p className="ritual-card__copy">只保留最近两条，完整日志与过场回放放到档案页查看。</p>
+          <section className="ritual-card rounded-2xl p-4">
+            <p className="ritual-card__eyebrow">大工焦点</p>
+            <h3 className="ritual-card__title">当前推进</h3>
+            <div className="workshop-overview__focus-grid mt-4">
+              <div className="workshop-overview__focus-item">
+                <span className="workshop-overview__focus-item-label">推荐工作台</span>
+                <strong className="workshop-overview__focus-item-value">
+                  {recommendedStation?.title ?? plan.actionCue.label}
+                </strong>
+                <p className="workshop-overview__focus-item-copy">{plan.actionCue.description}</p>
               </div>
-              <Link
-                href="/workshop/journal"
-                className="game-button inline-flex min-h-10 items-center justify-center rounded-xl border border-[#8f7448]/20 bg-[rgba(255,252,245,0.82)] px-4 py-2 text-sm font-semibold text-[#4f3a1c] hover:bg-[rgba(246,237,214,0.92)]"
-              >
-                前往炼金档案
-              </Link>
+              <div className="workshop-overview__focus-item">
+                <span className="workshop-overview__focus-item-label">定式追踪</span>
+                <strong className="workshop-overview__focus-item-value">
+                  {plan.formulaGoal ? plan.formulaGoal.formulaName : "当前没有新的定式阻塞"}
+                </strong>
+                <p className="workshop-overview__focus-item-copy">
+                  {plan.formulaGoal
+                    ? formulaIngredientsTotal > 0
+                      ? `材料已就位 ${formulaIngredientsReady}/${formulaIngredientsTotal} 项`
+                      : `当前状态：${FORMULA_STATUS_LABELS[plan.formulaGoal.status]}`
+                    : "可以按自己的节奏推进探索、炼成或档案整理。"}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="ritual-card rounded-2xl p-4">
+            <p className="ritual-card__eyebrow">工坊状态</p>
+            <h3 className="ritual-card__title">状态与记录</h3>
+            <div className="workshop-overview__meter-list mt-4">
+              {snapshotMeters.map((item) => (
+                <div key={item.label} className="workshop-overview__meter-card">
+                  <div className="workshop-overview__meter-head">
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
+                  </div>
+                  <div className="ritual-meter mt-2 h-2">
+                    <div className={`ritual-meter__fill ${item.tone}`} style={{ width: meterWidth(item.value) }} />
+                  </div>
+                  <p className="workshop-overview__meter-note">{item.note}</p>
+                </div>
+              ))}
             </div>
 
             <div className="ritual-log-list mt-4">
@@ -338,32 +292,7 @@ export default function WorkshopPage() {
                 <div className="workshop-overview__empty-state">还没有新的工坊记录，先去推进一次剧情或炼成吧。</div>
               )}
             </div>
-          </article>
-        </section>
 
-        <aside className="workshop-page__sidebar reveal-up reveal-delay-3">
-          <section className="ritual-card rounded-2xl p-4">
-            <p className="ritual-card__eyebrow">工坊状态</p>
-            <h3 className="ritual-card__title">工坊状态</h3>
-            <div className="workshop-overview__meter-list mt-4">
-              {snapshotMeters.map((item) => (
-                <div key={item.label} className="workshop-overview__meter-card">
-                  <div className="workshop-overview__meter-head">
-                    <span>{item.label}</span>
-                    <strong>{item.value}</strong>
-                  </div>
-                  <div className="ritual-meter mt-2 h-2">
-                    <div className={`ritual-meter__fill ${item.tone}`} style={{ width: meterWidth(item.value) }} />
-                  </div>
-                  <p className="workshop-overview__meter-note">{item.note}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="ritual-card rounded-2xl p-4">
-            <p className="ritual-card__eyebrow">材料总览</p>
-            <h3 className="ritual-card__title">库存与控制</h3>
             <div className="ritual-list mt-4">
               {overview.reserveHighlights.map(({ key, value }) => (
                 <div key={key} className="ritual-list__item flex items-center justify-between gap-3">
@@ -373,15 +302,23 @@ export default function WorkshopPage() {
               ))}
             </div>
             <p className="workshop-overview__resource-note">
-              当前共有 {overview.totalResourceKinds} 种材料，总量 {overview.totalResourceUnits}。如需完整整理，请前往档案页。
+              当前共有 {overview.totalResourceKinds} 种材料，总量 {overview.totalResourceUnits}。
             </p>
-            <button
-              type="button"
-              onClick={resetGame}
-              className="game-button mt-4 w-full rounded-lg border border-[#6b5b37] bg-[#ead8aa] px-3 py-2 text-sm hover:bg-[#dfc993]"
-            >
-              重开工坊
-            </button>
+            <div className="mt-4 flex gap-2">
+              <Link
+                href="/workshop/journal"
+                className="game-button inline-flex min-h-10 flex-1 items-center justify-center rounded-xl border border-[#8f7448]/20 bg-[rgba(255,252,245,0.82)] px-4 py-2 text-sm font-semibold text-[#4f3a1c] hover:bg-[rgba(246,237,214,0.92)]"
+              >
+                前往档案
+              </Link>
+              <button
+                type="button"
+                onClick={resetGame}
+                className="game-button flex-1 rounded-lg border border-[#6b5b37] bg-[#ead8aa] px-3 py-2 text-sm hover:bg-[#dfc993]"
+              >
+                重开
+              </button>
+            </div>
           </section>
         </aside>
       </div>

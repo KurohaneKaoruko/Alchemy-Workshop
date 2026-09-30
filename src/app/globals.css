@@ -374,6 +374,18 @@ a {
   gap: 0.85rem;
 }
 
+.workshop-overview__dashboard {
+  align-items: start;
+}
+
+.workshop-overview__dashboard .workshop-page__sidebar {
+  grid-auto-rows: min-content;
+}
+
+.workshop-overview__dashboard .workshop-overview__focus-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .workshop-overview__focus-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -600,6 +612,11 @@ a {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.story-page__sidebar-card {
+  display: grid;
+  gap: 0.85rem;
+}
+
 .story-page__guidance-card {
   padding: 0.85rem 0.9rem;
 }
@@ -609,6 +626,20 @@ a {
   padding-top: 0.7rem;
   border-top: 1px solid rgba(224, 191, 119, 0.16);
   color: rgba(244, 229, 193, 0.82);
+}
+
+.story-page__tablet-quote--inline {
+  margin-top: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(138, 107, 56, 0.14);
+  color: rgba(88, 64, 28, 0.8);
+}
+
+.story-choice-card .ritual-link-card__copy {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .journal-page__hero {
@@ -739,6 +770,12 @@ a {
   gap: 0.5rem;
 }
 
+.journal-page__view-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .journal-page__section-head {
   position: relative;
   z-index: 1;
@@ -746,6 +783,11 @@ a {
 
 .journal-page__snapshot-item--compact .journal-page__snapshot-value {
   font-size: 1.05rem;
+}
+
+.journal-page__support-card {
+  display: grid;
+  gap: 0.85rem;
 }
 
 .settings-page__hero {
@@ -888,6 +930,23 @@ a {
   gap: 0.85rem;
 }
 
+.first-day-hint__head-actions,
+.first-day-hint__collapsed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.first-day-hint__head-actions {
+  justify-content: flex-end;
+}
+
+.first-day-hint--recap {
+  padding: 0.88rem 0.94rem;
+}
+
 .first-day-hint__milestone {
   display: flex;
   flex-wrap: wrap;
@@ -905,10 +964,30 @@ a {
   padding: 0.9rem 0.95rem;
 }
 
+.first-day-hint--collapsed {
+  padding: 0.82rem 0.88rem;
+}
+
+.first-day-hint__collapsed {
+  position: relative;
+  z-index: 1;
+}
+
+.first-day-hint__collapsed-copy {
+  margin: 0.28rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: rgba(88, 64, 28, 0.8);
+}
+
+.first-day-hint--recap .ritual-card__copy {
+  margin-top: 0.28rem;
+}
+
 .first-day-hint__steps {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .first-day-hint__step {
@@ -1134,7 +1213,7 @@ a {
   }
 
   .first-day-hint__steps {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

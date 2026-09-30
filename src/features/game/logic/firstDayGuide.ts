@@ -1,5 +1,6 @@
 import { RESOURCE_LABELS } from "@/features/game/data/resourceMeta";
 import { ARCANE_FORMULAS } from "@/features/game/logic/alchemyCircle";
+import { buildGrandWorkPlan } from "@/features/game/logic/grandWorkPlan";
 import type { GameState } from "@/features/game/types";
 
 export type FirstDayGuideStepId = "story" | "alchemy" | "journal";
@@ -19,6 +20,7 @@ export interface FirstDayGuideStep {
 }
 
 export interface FirstDayGuide {
+  mode: "full" | "recap";
   headline: string;
   summary: string;
   currentStepId: FirstDayGuideStepId;
@@ -26,14 +28,24 @@ export interface FirstDayGuide {
   currentActionLabel: string;
   milestone:
     | {
-        id: "story_complete" | "alchemy_complete";
+        id: "story_complete" | "alchemy_complete" | "journal_complete";
+        label: string;
         title: string;
         summary: string;
-        nextHref: "/workshop/alchemy" | "/workshop/journal";
+        nextHref: "/workshop/story" | "/workshop/alchemy" | "/workshop/journal";
         nextActionLabel: string;
       }
     | null;
   steps: FirstDayGuideStep[];
+}
+
+export function getFirstDayGuideSignature(guide: FirstDayGuide): string {
+  return [
+    guide.mode,
+    guide.currentStepId,
+    ...guide.steps.map((step) => `${step.id}:${step.status}`),
+    guide.milestone?.id ?? "none",
+  ].join("|");
 }
 
 const FIRST_FORMULA = ARCANE_FORMULAS.find((formula) => formula.id === "triad_prime");
@@ -51,8 +63,29 @@ function buildFirstFormulaHint(): string {
 }
 
 export function buildFirstDayGuide(game: GameState): FirstDayGuide | null {
-  if (game.day !== 1 || game.rank !== "学徒") {
+  if (game.rank !== "学徒" || game.ended) {
     return null;
+  }
+
+  if (game.day > 1) {
+    const currentPlan = buildGrandWorkPlan(game);
+    const recapStepId =
+      currentPlan.actionCue.href === "/workshop/alchemy"
+        ? "alchemy"
+        : currentPlan.actionCue.href === "/workshop/journal"
+          ? "journal"
+          : "story";
+
+    return {
+      mode: "recap",
+      headline: "首日回顾",
+      summary: `你已经摸过第一天的基础节奏。今天建议先做「${currentPlan.actionCue.title}」，继续把工坊循环跑顺。`,
+      currentStepId: recapStepId,
+      currentHref: currentPlan.actionCue.href,
+      currentActionLabel: STEP_ACTION_LABELS[recapStepId],
+      milestone: null,
+      steps: [],
+    };
   }
 
   const hasStoryProgress =
@@ -93,9 +126,16 @@ export function buildFirstDayGuide(game: GameState): FirstDayGuide | null {
   ];
 
   const currentStep = steps.find((step) => step.id === currentStepId) ?? steps[0];
+  const projectedNextDayPlan = buildGrandWorkPlan({
+    ...game,
+    day: game.day + 1,
+    actionsLeft: 3,
+    vigor: Math.min(12, game.vigor + 2),
+  });
   const milestone = hasStoryProgress && !hasAlchemyProgress
     ? {
         id: "story_complete" as const,
+        label: "阶段完成反馈",
         title: "第一步完成：你已经拿到第一条线索",
         summary: "接下来把注意力转到魔法阵，试一次基础炼成，让首日循环真正跑起来。",
         nextHref: "/workshop/alchemy" as const,
@@ -104,14 +144,30 @@ export function buildFirstDayGuide(game: GameState): FirstDayGuide | null {
     : hasAlchemyProgress && !hasArchiveReview
       ? {
           id: "alchemy_complete" as const,
+          label: "阶段完成反馈",
           title: "第二步完成：第一次炼成已经达成",
           summary: "现在回档案页看日志、库存与回放，你就能完整收束首日收获。",
           nextHref: "/workshop/journal" as const,
           nextActionLabel: STEP_ACTION_LABELS.journal,
         }
+      : hasArchiveReview
+        ? {
+            id: "journal_complete" as const,
+            label: "首日完成总结",
+            title: "首日流程已经跑通",
+            summary: `明天开局更建议先做「${projectedNextDayPlan.actionCue.title}」，继续把今天摸到的线索推进下去。`,
+            nextHref: projectedNextDayPlan.actionCue.href,
+            nextActionLabel:
+              projectedNextDayPlan.actionCue.href === "/workshop/story"
+                ? STEP_ACTION_LABELS.story
+                : projectedNextDayPlan.actionCue.href === "/workshop/alchemy"
+                  ? STEP_ACTION_LABELS.alchemy
+                  : STEP_ACTION_LABELS.journal,
+          }
       : null;
 
   return {
+    mode: "full",
     headline: "学徒首日路线",
     summary: "首日不需要记住所有系统，只要先探索、再炼成、最后回看档案即可。",
     currentStepId,
