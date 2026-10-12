@@ -1,8 +1,11 @@
-name: Build Windows Release
+name: Build Windows Release (Desktop)
 
-# 只在「要发布」时才构建，日常 push 到 main 不触发：
+# 桌面端（Godot）构建：只在「要发布」时才构建，日常 push 到 main 不触发：
 #   1) 推 v* 标签  ->  例如 git tag v1.2.3 && git push origin v1.2.3
 #   2) Actions 页面手动触发（Run workflow）
+#
+# 说明：本仓库为 monorepo，Godot 工程位于 apps/desktop/。
+#       Web 端（apps/web）请另配工作流或部署平台，标签约定可用 web-v*。
 on:
   push:
     tags:
@@ -16,6 +19,9 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DESKTOP_DIR: apps/desktop
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,7 +33,7 @@ jobs:
         id: version
         run: |
           set -euo pipefail
-          PROJECT_VER="$(sed -n 's/^config\/version="\([^"]*\)"$/\1/p' project.godot | head -n1)"
+          PROJECT_VER="$(sed -n 's/^config\/version="\([^"]*\)"$/\1/p' "${DESKTOP_DIR}/project.godot" | head -n1)"
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
             REF_VER="${GITHUB_REF_NAME#v}"
             if [ "${REF_VER}" != "${PROJECT_VER}" ]; then
@@ -56,15 +62,15 @@ jobs:
 
       - name: Export release build
         run: |
-          mkdir -p builds
+          mkdir -p "${DESKTOP_DIR}/builds"
           APP="AlchemyWorkshop_v${{ steps.version.outputs.version }}.exe"
-          ./Godot_v4.7.2-stable_linux.x86_64 --headless --import > /dev/null 2>&1 || true
-          ./Godot_v4.7.2-stable_linux.x86_64 --headless --export-release "Windows Desktop" "builds/${APP}"
-          ls -la builds/
+          ./Godot_v4.7.2-stable_linux.x86_64 --headless --path "${DESKTOP_DIR}" --import > /dev/null 2>&1 || true
+          ./Godot_v4.7.2-stable_linux.x86_64 --headless --path "${DESKTOP_DIR}" --export-release "Windows Desktop" "${DESKTOP_DIR}/builds/${APP}"
+          ls -la "${DESKTOP_DIR}/builds/"
 
       - name: Checksum
         run: |
-          cd builds
+          cd "${DESKTOP_DIR}/builds"
           APP="AlchemyWorkshop_v${{ steps.version.outputs.version }}.exe"
           sha256sum "${APP}" | tee "${APP}.sha256"
 
@@ -73,6 +79,6 @@ jobs:
         with:
           name: AlchemyWorkshop_v${{ steps.version.outputs.version }}_win64
           path: |
-            builds/AlchemyWorkshop_v${{ steps.version.outputs.version }}.exe
-            builds/AlchemyWorkshop_v${{ steps.version.outputs.version }}.exe.sha256
+            apps/desktop/builds/AlchemyWorkshop_v${{ steps.version.outputs.version }}.exe
+            apps/desktop/builds/AlchemyWorkshop_v${{ steps.version.outputs.version }}.exe.sha256
           if-no-files-found: error

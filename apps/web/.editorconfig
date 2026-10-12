@@ -1,0 +1,11 @@
+# Web 端使用 2 空格缩进，覆盖仓库根 .editorconfig 的默认 tab
+root = false
+
+[*.{ts,tsx,js,jsx,mjs,cjs,json,css,md,yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.{ts,tsx,js,jsx}]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
