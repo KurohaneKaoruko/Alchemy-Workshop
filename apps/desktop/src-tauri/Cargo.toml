@@ -1,0 +1,36 @@
+[package]
+name = "alchemy-workshop"
+version = "0.1.0"
+description = "炼金工坊桌面端：Tauri 外壳，打包 Web 端静态产物"
+authors = ["KurohaneKaoruko"]
+license = ""
+repository = ""
+edition = "2024"
+rust-version = "1.90"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.2", features = [] }
+# 见文末 indexmap 说明：构建依赖链（tauri-build -> tauri-utils -> schemars）同样需要 std 特性
+indexmap = { version = "1.9", features = ["std"] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.12.3", features = [] }
+tauri-plugin-log = "2"
+tauri-plugin-http = "2"
+
+# --- 绕过上游已知问题（tauri-apps/tauri#14928）---
+# schemars 0.8.22 里的 `pub type Map<K, V> = indexmap::IndexMap<K, V>;` 依赖 IndexMap 的
+# 默认 hasher 参数，而 indexmap 1.9.3 移除了 `default = ["std"]`，导致 has_std 未开启，
+# 编译报 “struct takes 3 generic arguments but 2 generic arguments were supplied”。
+# 显式打开 std 特性后，indexmap 的 build.rs 会直接标记 has_std，问题消失。
+# 待上游修复（或 schemars 升到 1.x）后，即可删除上面两处 indexmap 依赖。
+indexmap = { version = "1.9", features = ["std"] }

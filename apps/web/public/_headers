@@ -1,0 +1,6 @@
+# Cloudflare Pages 自定义响应头
+# 构建时由 public/ 复制到 out/，仅 Cloudflare Pages 会读取该文件。
+
+# Next.js 构建产物带内容哈希，可长期强缓存
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

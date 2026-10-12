@@ -1,24 +1,6 @@
-# Godot 4 generated files
-.godot/
-*.translation
+# 依赖
+node_modules/
 
-# 本地引擎与导出模板（不入库）
-tools/godot/
-.godot-user/
-
-# Export and build output
-builds/
-export/
-*.exe
-*.pck
-*.zip
-
-# Local test-run artifacts
-.run/
-
-# 旧版本地备份（仅本地保留）
-.old/
-
-# OS junk
-Thumbs.db
-.DS_Store
+# Tauri / Rust 构建产物（src-tauri/.gitignore 也有一份）
+src-tauri/target/
+src-tauri/gen/schemas/

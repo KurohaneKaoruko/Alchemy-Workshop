@@ -507,6 +507,11 @@ export default function SettingsPage() {
               </div>
               <div className="ritual-list__item">
                 <p className="text-sm leading-7 text-[#4f3b1d]">
+                  网页版为纯静态站点，请求由浏览器直接发往你填写的接口，不经过任何中间服务器；因此该接口需要允许跨域（CORS）访问。
+                </p>
+              </div>
+              <div className="ritual-list__item">
+                <p className="text-sm leading-7 text-[#4f3b1d]">
                   数值结算仍在本地完成，AI 仅参与文本生成，不接管规则判断。
                 </p>
               </div>

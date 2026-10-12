@@ -1,0 +1,18 @@
+{
+  "name": "alchemy-workshop-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "炼金工坊桌面端：Tauri 外壳，打包 apps/web 的静态产物",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:web": "npm --prefix ../web run build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  },
+  "dependencies": {
+    "@tauri-apps/plugin-http": "^2.8.2"
+  }
+}
