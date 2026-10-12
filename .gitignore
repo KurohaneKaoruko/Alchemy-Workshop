@@ -1,21 +1,13 @@
-# Godot 4 generated files
-.godot/
-*.translation
-
-# 本地引擎与导出模板（不入库）
-tools/godot/
-.godot-user/
-
-# Export and build output
-builds/
-export/
-*.exe
-*.pck
-*.zip
-
-# Local test-run artifacts
-.run/
+# 仓库级忽略规则（OS / 编辑器）
+# 各平台自身的忽略规则见 apps/*/.gitignore
+#   - apps/desktop/.gitignore  Godot 工程
+#   - apps/web/.gitignore      Next.js 工程
 
 # OS junk
 Thumbs.db
 .DS_Store
+desktop.ini
+
+# Editor
+.idea/
+.vscode/
