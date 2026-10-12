@@ -65,11 +65,20 @@ npm run preview    # 用 Cloudflare Pages 本地运行时预览 out/
 
 | 配置项 | 值 |
 | --- | --- |
+| Framework preset | `None` |
 | Root directory | `apps/web` |
 | Build command | `npm run build` |
 | Build output directory | `out` |
+| 环境变量 | `NODE_VERSION` = `22`（Next.js 16 要求 Node ≥ 20.9） |
 
 之后每次推送到 `main` 都会自动重新构建发布。
+
+> **两个必填项，填错就会构建失败：**
+> - **Framework preset 必须是 `None`**。选 Next.js 会让 Cloudflare 去跑 `next-on-pages`
+>   并去找 `.vercel/output/static`；本项目是纯静态导出，不需要也不兼容那套流程。
+> - **Root directory 必须填 `apps/web`**。仓库根目录下没有 `package.json` 和
+>   `next.config.ts`，留空会让 Cloudflare 在根目录执行 `next build`，
+>   报 `Couldn't find any pages or app directory`。
 
 ### 方式二：本地直传
 
