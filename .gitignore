@@ -8,7 +8,6 @@ tools/godot/
 
 # Export and build output
 builds/
-build/
 export/
 *.exe
 *.pck
