@@ -1,0 +1,28 @@
+Original prompt: 继续优化这个游戏的页面，现在页面塞了太多东西，甚至还有重复的，[Image #1] ，把页面重构一下，顶部导航栏不用动
+
+- Refactored all five workshop pages (`/workshop`, `story`, `alchemy`, `journal`, `settings`) to reduce repeated summaries while keeping the top navigation structure unchanged.
+- Added `buildWorkshopOverview()` and `buildFirstDayGuide()` helpers plus matching Vitest coverage for overview condensation and first-day guidance.
+- Added first-day onboarding to the overview, then extended it into `剧情探索`、`魔法阵炼金`、`炼金档案`, and later added milestone feedback for completing step 1 and step 2.
+- Localized the remaining workshop-area English labels, including shared content components and the topbar identity layer.
+- Shared polish pass tightened workshop spacing and reduced the visual weight of the collapsed `GrandWorkAgenda` footer.
+- Latest refinement: compressed subpage onboarding so `FirstDayGuideHint` now shows only the most relevant two steps on subpages instead of re-listing the full three-step route.
+- Validation history before the latest compact-only tweak: `npm run test` passed and `npm run build` passed repeatedly during the previous iterations.
+- Current environment note: after the latest shell/environment switch, attempts to rerun `npm run test` / `npm run build` fail because the shell resolves the repository path with broken encoding and Vitest cannot resolve packages from the Chinese path. The most recent change only affects subpage onboarding density in `src/features/game/components/FirstDayGuideHint.tsx` and related CSS.
+- Added a first-day completion summary layer: after clearing step 1 or step 2, the guide now shows an explicit milestone banner with the next recommended destination; after all three first-day steps are complete, it can show a “首日完成总结” and recommend the likely second-day opening focus.
+- Validation note: `tsc --noEmit` passed after fixing the nullability issue introduced during this tweak. A fresh `next build` attempt is currently blocked by an environment-level Turbopack `os error 5` while reading `node_modules`, so this last refinement has code-level validation but no newly built screenshot yet.
+- Added a lightweight dismiss/reopen flow to `FirstDayGuideHint`: players can now click “我知道了” to collapse the current guide state, and later restore it with “重新展开”.
+- Persistence note: the collapsed state is stored by guide signature in local storage, so the hint stays hidden for the current onboarding phase but reappears automatically when the first-day step or milestone changes.
+- Validation: `tsc --noEmit` passed after this change. Full `vitest` / `next build` verification remains blocked by the current environment’s path and `node_modules` read issues.
+- Added a lightweight dismissal flow to `FirstDayGuideHint`: players can now click “我知道了” to collapse the current guide state, and later restore it with “重新展开”.
+- Persistence note: the collapse state is stored locally by a guide signature, so the hint stays hidden for the current onboarding phase but reappears automatically when the first-day step or milestone changes.
+- Validation: `tsc --noEmit` passed after this change. Full `vitest` / `next build` verification is still blocked by the current environment’s path/node_modules issue.
+- Added a day-two-and-later recap mode to `buildFirstDayGuide()`, so the large first-day guide automatically downgrades into a smaller “首日回顾” reminder once the player is past day one but still in the apprentice loop.
+- Unified the overview and subpage onboarding UI by switching the overview page over to the shared `FirstDayGuideHint` component, which now handles full-guide, recap, and collapsed states in one place.
+- Validation: `tsc --noEmit` passed after this recap-mode refactor and the added day-two test. Full `vitest` / `next build` verification remains blocked by the current environment’s path and `node_modules` read issues.
+- Compressed the workshop overview further by removing its extra full-width onboarding block and overview-only guide UI, then reusing the shared `FirstDayGuideHint` in compact mode inside a tighter dashboard layout.
+- Compressed `剧情探索` further by merging the right-side snapshot / clue / chapter-note stack into one compact auxiliary card and trimming the height of choice cards.
+- Validation: `tsc --noEmit` passed after this single-screen-oriented compression pass. Full runtime validation remains blocked by the current environment’s path and `node_modules` read issues.
+- Compressed `炼金档案` further by merging the main logs/replays into a single switchable record panel and combining snapshot/maintenance into one support card, reducing another full vertical block from the page.
+- Validation: `tsc --noEmit` passed after the archive compression pass. Full runtime validation remains blocked by the current environment’s path and `node_modules` read issues.
+- Compressed the workshop overview further by removing the separate full-width “大工焦点” and overview-only onboarding block, then moving that information into a tighter right-side rail plus the shared compact `FirstDayGuideHint`.
+- Validation: `tsc --noEmit` passed after this overview compression pass. Full runtime validation is still limited by the current environment’s path / `node_modules` issues.
